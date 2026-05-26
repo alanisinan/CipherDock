@@ -1,0 +1,224 @@
+{
+  "avg_score_benign": 41,
+  "avg_score_malicious": 78.67,
+  "best_f1": 0.9474,
+  "best_threshold": 50,
+  "capture_mode": "Xcode Simulator / Frida",
+  "category_stats": [
+    {
+      "benign_avg": 0.2,
+      "category": "anti-analysis",
+      "delta": 0.4667,
+      "malicious_avg": 0.6667,
+      "method": "two-sided asymptotic Mann-Whitney U with tie correction",
+      "p_value": 0.05538,
+      "u_statistic": 40.0
+    },
+    {
+      "benign_avg": 0.8,
+      "category": "crypto",
+      "delta": 0.2,
+      "malicious_avg": 1.0,
+      "method": "two-sided asymptotic Mann-Whitney U with tie correction",
+      "p_value": 0.017892,
+      "u_statistic": 60.0
+    },
+    {
+      "benign_avg": 0.2,
+      "category": "entitlements",
+      "delta": 0.1333,
+      "malicious_avg": 0.3333,
+      "method": "two-sided asymptotic Mann-Whitney U with tie correction",
+      "p_value": 0.577711,
+      "u_statistic": 65.0
+    },
+    {
+      "benign_avg": 1.4,
+      "category": "network",
+      "delta": 0.6,
+      "malicious_avg": 2.0,
+      "method": "two-sided asymptotic Mann-Whitney U with tie correction",
+      "p_value": 1.5e-05,
+      "u_statistic": 30.0
+    },
+    {
+      "benign_avg": 0.4,
+      "category": "secrets",
+      "delta": 0.6,
+      "malicious_avg": 1.0,
+      "method": "two-sided asymptotic Mann-Whitney U with tie correction",
+      "p_value": 1.5e-05,
+      "u_statistic": 30.0
+    },
+    {
+      "benign_avg": 0.6,
+      "category": "sensitive-storage",
+      "delta": 0.0667,
+      "malicious_avg": 0.6667,
+      "method": "two-sided asymptotic Mann-Whitney U with tie correction",
+      "p_value": 1.0,
+      "u_statistic": 75.0
+    },
+    {
+      "benign_avg": 0.8,
+      "category": "transport-security",
+      "delta": 0.8667,
+      "malicious_avg": 1.6667,
+      "method": "two-sided asymptotic Mann-Whitney U with tie correction",
+      "p_value": 0.003011,
+      "u_statistic": 20.0
+    }
+  ],
+  "companion_build_note": "Events reflect real app runtime behavior; IPA SHA mismatch from Simulator recompilation",
+  "corpus_benign": 5,
+  "corpus_benign_pending": 3,
+  "corpus_benign_real": 5,
+  "corpus_malicious": 30,
+  "corpus_total": 35,
+  "dynamic_endpoint_captured": "https://api.joinmastodon.org/default-servers",
+  "dynamic_endpoint_correlation": "DOMAIN_MATCH",
+  "dynamic_events_captured": 2,
+  "dynamic_network_calls": 1,
+  "dynamic_status": "captured_companion_build",
+  "eval_note": "Controlled synthetic evaluation. Official open-source builds pending.",
+  "f1_confidence_interval": "0.95 +/- 0.09 (95% CI [0.82, 1.00])",
+  "findings_per_benign_avg": 4.4,
+  "findings_per_malicious_avg": 7.33,
+  "obvious_variant_f1": 0.9231,
+  "precision_at_best": 0.9,
+  "recall_at_best": 1.0,
+  "score_delta": 37.67,
+  "simulator_target": "iPhone 17 Pro Simulator",
+  "subtle_variant_f1": 0.8571,
+  "threshold_curve": [
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9,
+      "precision": 0.8182,
+      "recall": 1.0,
+      "threshold": 10
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9,
+      "precision": 0.8182,
+      "recall": 1.0,
+      "threshold": 15
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9,
+      "precision": 0.8182,
+      "recall": 1.0,
+      "threshold": 20
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9,
+      "precision": 0.8182,
+      "recall": 1.0,
+      "threshold": 25
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9,
+      "precision": 0.8182,
+      "recall": 1.0,
+      "threshold": 30
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9,
+      "precision": 0.8182,
+      "recall": 1.0,
+      "threshold": 35
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9474,
+      "precision": 0.9,
+      "recall": 1.0,
+      "threshold": 40
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9474,
+      "precision": 0.9,
+      "recall": 1.0,
+      "threshold": 45
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9474,
+      "precision": 0.9,
+      "recall": 1.0,
+      "threshold": 50
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9474,
+      "precision": 0.9,
+      "recall": 1.0,
+      "threshold": 55
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.9474,
+      "precision": 0.9,
+      "recall": 1.0,
+      "threshold": 60
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "threshold": 65
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.8,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "threshold": 70
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.8,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "threshold": 75
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.8,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "threshold": 80
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "threshold": 85
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "threshold": 90
+    },
+    {
+      "evaluated_apps": 11,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "threshold": 95
+    }
+  ],
+  "top_finding_category": "network",
+  "vt_available": false,
+  "vt_missed_caught_by_cipherdock": null
+}

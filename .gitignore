@@ -1,0 +1,50 @@
+# IPA files — never commit (copyright + size)
+*.ipa
+eval/corpus/*.ipa
+eval/corpus/**/*.ipa
+fixtures/**/*.ipa
+workbench-data/uploads/
+
+# Report data with local machine paths
+workbench-data/reports/
+workbench-data/verification/
+workbench-data/runtime-sessions/
+workbench-data/runtime-companions/
+workbench-data/runtime-target-bindings.json
+eval/reports/
+verification-reports/
+real-sample-reports/
+batch-verification-reports/
+mastodon-symbol-reports/
+sample-reports/
+
+# Local build and tool workspaces
+.ire-zero-tools/
+simulator-targets/
+eval/corpus/sources/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.mobileprovision
+config/local.py
+
+# Large binary artifacts
+*.bin
+*.o

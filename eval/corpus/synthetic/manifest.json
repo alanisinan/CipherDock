@@ -1,0 +1,309 @@
+{
+  "base_ipa": "/path/to/project/eval/corpus/benign/mastodon-ios.ipa",
+  "base_sha256": "f5abc1bed12063c3fb532279714c4d33d052bd4186aacb0ddb7cde402528a41b",
+  "code_signature_note": "Variant modification invalidates any original code signature; use only for static evaluation.",
+  "purpose": "Controlled static-analysis positive fixtures; not deployable app releases.",
+  "schema": "ire-zero-synthetic-corpus-v1",
+  "variants": [
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval001",
+      "file": "mastodon-ios__irez.eval001.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval001.ipa",
+      "sha256": "2655c3b5cf42c21ff58b66855d374ed4346048a89619fa20764e32c734728f1c"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval002",
+      "file": "mastodon-ios__irez.eval002.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval002.ipa",
+      "sha256": "4f3cfb9988c2b99c9bbad22cade02640e1867f9afe6845e76c71ecabd88dbf60"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval003",
+      "file": "mastodon-ios__irez.eval003.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval003.ipa",
+      "sha256": "4937651fb2ed0dfaec0224b832003974b59fefa83e750c57041f19eb8fa1e1f4"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval004",
+      "file": "mastodon-ios__irez.eval004.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval004.ipa",
+      "sha256": "a211f140fe345559d5d7113b4c32752f2ced9f1771983a0cb3f9a03ac896f1de"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval005",
+      "file": "mastodon-ios__irez.eval005.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval005.ipa",
+      "sha256": "5c3f04c91fc70f4accf3525c543d9fd0894055af8d96a6f10683e859df88af9a"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval006",
+      "file": "mastodon-ios__irez.eval006.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval006.ipa",
+      "sha256": "af8674c292f5e8d85491ae5d8d52960ee8dc18b35df005a8a5251205bcb7f47c"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval007",
+      "file": "mastodon-ios__irez.eval007.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval007.ipa",
+      "sha256": "ae4ee60a2fca4da63afa81447ee5f4a156cf8fddb7b999f6ac5650dab5e2e494"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval008",
+      "file": "mastodon-ios__irez.eval008.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval008.ipa",
+      "sha256": "8209ebd2ed3ef6883065a439072ef697e453b75dcaaa995a9451f28d0d249bda"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval009",
+      "file": "mastodon-ios__irez.eval009.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval009.ipa",
+      "sha256": "4ae9d67a8346a0c22bf7fff7fa2d30d3b77cb890d2ed8fb53dc8b1d53747f6e4"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval010",
+      "file": "mastodon-ios__irez.eval010.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval010.ipa",
+      "sha256": "05d30d8eff66a193efeda021520c7a84c410e25488397ce104b96de094cb19c4"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval011",
+      "file": "mastodon-ios__irez.eval011.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval011.ipa",
+      "sha256": "3e5d2fc20764d4cc20c50cd7835bdeec04bb044242f385e0725b8906b2747fee"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval012",
+      "file": "mastodon-ios__irez.eval012.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval012.ipa",
+      "sha256": "c544168701e601ab78de7d03fb134a7135580d21167c1d6940ae4abd1dcb1590"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval013",
+      "file": "mastodon-ios__irez.eval013.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval013.ipa",
+      "sha256": "9c64efc6552e21dd4be26fc5c9c7a6a86533502207e78cd4a4dd28f5e0b92872"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval014",
+      "file": "mastodon-ios__irez.eval014.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval014.ipa",
+      "sha256": "b9eb0d52a33354cf496108b8b42387247568c3973b75b3f998cf4dfe9fb4df59"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval015",
+      "file": "mastodon-ios__irez.eval015.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval015.ipa",
+      "sha256": "9c4a96d89b0d1cbf25086aa15bc820876f95a4927c5f819d97dc7067b39cc7b3"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval016",
+      "file": "mastodon-ios__irez.eval016.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval016.ipa",
+      "sha256": "81f838d31492ae25b51aa18a09b976dd3abf0a4ab6b8ceaed168edfbf236b07d"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval017",
+      "file": "mastodon-ios__irez.eval017.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval017.ipa",
+      "sha256": "391cfed9bfc0bfff8901dfbf94a5c8b3faa15307eb75a22b60478b08bf1452cf"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval018",
+      "file": "mastodon-ios__irez.eval018.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval018.ipa",
+      "sha256": "9b18ae53c367162a46e6020c35849f18bd727acb9cb414130235fdfdd6121a3b"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval019",
+      "file": "mastodon-ios__irez.eval019.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval019.ipa",
+      "sha256": "bafb1617c7c17186711233e12a01c9441942825d4eae8be07f34c6e891abe407"
+    },
+    {
+      "behaviors": [
+        "ats_disabled",
+        "hardcoded_secret",
+        "cydia_scheme",
+        "jailbreak_strings",
+        "http_endpoint",
+        "pasteboard",
+        "frida_detection"
+      ],
+      "bundle_identifier": "org.joinmastodon.app.irez.eval020",
+      "file": "mastodon-ios__irez.eval020.ipa",
+      "relative_path": "synthetic/mastodon-ios__irez.eval020.ipa",
+      "sha256": "ea2c2b166c800a71669ecd93a870197e816c664a07d740f51c2974114c5a1199"
+    }
+  ]
+}

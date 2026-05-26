@@ -1,0 +1,10 @@
+scope,dataset,threshold,selected_from_calibration,evaluated_apps,true_positive,false_positive,true_negative,false_negative,precision,recall,f1,f1_bootstrap_mean,f1_ci_low,f1_ci_high,f1_ci_margin
+all,held_out,50,true,11,9,1,1,0,0.9000,1.0000,0.9474,0.9467,0.8235,1.0000,0.0882
+all,held_out,70,false,11,6,0,2,3,1.0000,0.6667,0.8000,0.7829,0.5000,1.0000,0.2500
+all,held_out,90,false,11,0,0,2,9,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+obvious,held_out,50,true,8,6,1,1,0,0.8571,1.0000,0.9231,0.9194,0.7273,1.0000,0.1364
+obvious,held_out,70,false,8,6,0,2,0,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,0.0000
+obvious,held_out,90,false,8,0,0,2,6,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+subtle,held_out,50,true,5,3,1,1,0,0.7500,1.0000,0.8571,0.8339,0.4000,1.0000,0.3000
+subtle,held_out,70,false,5,0,0,2,3,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+subtle,held_out,90,false,5,0,0,2,3,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000

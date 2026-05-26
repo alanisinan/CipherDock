@@ -1,0 +1,52 @@
+{
+  "session": "authorized-synthetic-runtime",
+  "events": [
+    {
+      "id": "capture-keychain",
+      "timestamp": "00:03.801",
+      "layer": "keychain",
+      "operation": "SecItemAdd",
+      "value": "service=com.example.synthetic access=kSecAttrAccessibleAlways",
+      "severity": "high",
+      "verdict": "runtime confirmation",
+      "stack": [
+        "-[SyntheticStore saveToken:]",
+        "_SecItemAdd",
+        "securityd xpc_submit"
+      ],
+      "static_evidence": [
+        "strings: kSecAttrAccessibleAlways",
+        "finding: sensitive storage"
+      ]
+    },
+    {
+      "id": "capture-http",
+      "timestamp": "00:04.229",
+      "layer": "network",
+      "operation": "URLSessionTask resume",
+      "value": "POST http://insecure.example.test/collect",
+      "severity": "high",
+      "verdict": "cleartext request observed",
+      "stack": [
+        "Telemetry.flush()",
+        "URLSession.dataTask(with:)"
+      ],
+      "static_evidence": [
+        "strings: http://insecure.example.test/collect",
+        "ATS: NSAllowsArbitraryLoads"
+      ]
+    },
+    {
+      "id": "capture-private",
+      "timestamp": "00:07.421",
+      "layer": "process",
+      "operation": "CPDistributedMessagingCenter send",
+      "value": "AccountTokenDidChange",
+      "severity": "high",
+      "verdict": "private API executed",
+      "static_evidence": [
+        "symbol: CPDistributedMessagingCenter"
+      ]
+    }
+  ]
+}

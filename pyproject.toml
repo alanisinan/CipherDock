@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ire-zero"
+version = "0.1.0"
+description = "Hybrid iOS IPA security analyzer and local workbench with evidence-backed reports."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "iRE-Zero contributors" }]
+license = { text = "MIT" }
+dependencies = []
+
+[project.scripts]
+ire-zero = "ire_zero.cli:main"
+ire-zero-workbench = "ire_zero.webapp:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ire_zero*"]
+
+[tool.setuptools.package-data]
+ire_zero = ["data/*.json"]

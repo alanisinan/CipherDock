@@ -1,0 +1,5179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CipherDock Workbench</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0d0f12;
+  --surface: #14181d;
+  --surface-2: #1a2027;
+  --surface-3: #202832;
+  --border: #2f3944;
+  --border-soft: #242c35;
+  --text: #e7ecef;
+  --muted: #9aa7b1;
+  --faint: #65717d;
+  --teal: #48c7bd;
+  --blue: #6aa7ff;
+  --amber: #e6ad4f;
+  --red: #ec6d6d;
+  --green: #82c56f;
+  --violet: #b891ff;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.38);
+  --radius: 8px;
+  --mono: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, monospace;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--sans);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+.hidden-input {
+  position: fixed;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  max-width: min(420px, calc(100vw - 36px));
+  padding: 11px 13px;
+  border-radius: 8px;
+  background: #0f2228;
+  border: 1px solid #31535b;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  z-index: 20;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.search-hit {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-color: var(--teal) !important;
+}
+
+.search-dim {
+  opacity: 0.38;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  background: #0a0c0f;
+  border-right: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.brand {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #3b5560;
+  border-radius: 8px;
+  background: #0f2228;
+  color: var(--teal);
+}
+
+.brand-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-title strong {
+  font-size: 15px;
+}
+
+.brand-title span {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.nav-section {
+  padding: 18px 12px 0;
+}
+
+.nav-label {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0 8px 8px;
+}
+
+.nav-item {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.nav-item svg,
+.icon-button svg,
+.primary svg,
+.ghost svg,
+.tool-button svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.queue {
+  margin-top: auto;
+  padding: 14px 12px 18px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.queue-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.queue-row.active {
+  border-color: var(--teal);
+  background: #10242a;
+}
+
+.queue-row:hover {
+  border-color: #466272;
+}
+
+.queue-row strong {
+  display: block;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-row span {
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.queue-delete {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  align-self: start;
+  border-radius: 6px;
+  color: var(--faint);
+  background: transparent;
+  cursor: pointer;
+}
+
+.queue-delete:hover {
+  color: var(--red);
+  background: rgba(236, 109, 109, 0.12);
+}
+
+.queue-delete svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  margin-top: 4px;
+}
+
+.dot.green { background: var(--green); }
+.dot.amber { background: var(--amber); }
+.dot.blue { background: var(--blue); }
+
+.workspace {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 64px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(20, 24, 29, 0.92);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.target {
+  min-width: 0;
+}
+
+.target h1 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.target-meta {
+  display: flex;
+  gap: 12px;
+  color: var(--faint);
+  font-size: 12px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search {
+  width: 280px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #0d1116;
+  color: var(--faint);
+}
+
+.search input {
+  width: 100%;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.report-select {
+  max-width: 178px;
+  height: 36px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  background: #0d1116;
+  font: 12px/1 var(--mono);
+}
+
+.icon-button,
+.tool-button,
+.primary,
+.ghost {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.icon-button,
+.tool-button {
+  width: 36px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.icon-button:hover,
+.tool-button:hover {
+  color: var(--text);
+  border-color: #466272;
+}
+
+.primary {
+  padding: 0 13px;
+  color: #061215;
+  background: var(--teal);
+  font-weight: 700;
+}
+
+.primary:hover {
+  background: #61d6cd;
+}
+
+.primary:disabled,
+.ghost:disabled,
+.tool-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid rgba(6, 18, 21, 0.28);
+  border-top-color: #061215;
+  animation: spin 780ms linear infinite;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.ghost {
+  padding: 0 12px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.main {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(330px, 0.75fr);
+  grid-template-areas:
+    "intake side"
+    "analysis side"
+    "evidence evidence"
+    "bottom bottom";
+  gap: 18px;
+  align-items: start;
+}
+
+.main > section.panel:nth-child(1) { grid-area: intake; }
+.main > .side-stack { grid-area: side; }
+.main > section.panel:nth-child(3) { grid-area: analysis; }
+.main > section.panel:nth-child(4) { grid-area: evidence; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  min-width: 0;
+  scroll-margin-top: 84px;
+}
+
+.panel-head {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.panel-title {
+  min-width: 0;
+}
+
+.panel-title strong {
+  display: block;
+  font-size: 13px;
+}
+
+.panel-title span {
+  display: block;
+  margin-top: 1px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.panel-tools {
+  display: flex;
+  gap: 8px;
+}
+
+.intake {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.95fr) minmax(260px, 1.05fr);
+  gap: 14px;
+  padding: 14px;
+}
+
+.target-manager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  background: #11161c;
+}
+
+.target-manager span {
+  display: block;
+  color: var(--faint);
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.target-manager strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.target-manager-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.danger-button {
+  color: #ffd6d6;
+  background: rgba(236, 109, 109, 0.14);
+  border-color: rgba(236, 109, 109, 0.35);
+}
+
+.danger-button:hover {
+  color: #ffffff;
+  border-color: var(--red);
+}
+
+.dropzone {
+  min-height: 184px;
+  border: 1px dashed #42515f;
+  border-radius: 8px;
+  background: #0f1318;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: 18px;
+}
+
+.dropzone-main {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.file-icon {
+  width: 58px;
+  height: 70px;
+  border: 1px solid #405365;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--teal);
+  background: linear-gradient(180deg, #15232a, #0d1217);
+}
+
+.file-text strong {
+  display: block;
+  font-size: 15px;
+}
+
+.file-text span {
+  display: block;
+  margin-top: 4px;
+  color: var(--faint);
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.dropzone-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.check-item {
+  min-height: 86px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+.check-item strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.check-item span {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.meter {
+  height: 6px;
+  border-radius: 99px;
+  background: #0d1116;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.meter > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+}
+
+.score-card {
+  background: #10151a;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ring {
+  width: 156px;
+  height: 156px;
+  margin: 2px auto 16px;
+  border-radius: 50%;
+  background:
+    conic-gradient(var(--red) 0 238deg, #26303a 238deg 360deg);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.ring::after {
+  content: "";
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  background: #10151a;
+}
+
+.ring-value {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.ring-value strong {
+  display: block;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.ring-value span {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.score-list {
+  display: grid;
+  gap: 8px;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.score-row b {
+  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.stage-list {
+  display: grid;
+  gap: 10px;
+}
+
+.job-status {
+  margin: 12px 14px 0;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: #10151a;
+}
+
+.job-status-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.job-status-row strong {
+  color: var(--text);
+  display: block;
+  font-size: 13px;
+}
+
+.job-progress {
+  height: 7px;
+  margin-top: 10px;
+  border-radius: 99px;
+  background: #0a0d11;
+  overflow: hidden;
+}
+
+.job-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+  transition: width 260ms ease, background 180ms ease;
+}
+
+.job-status[data-state="running"] .job-progress i {
+  background: var(--blue);
+}
+
+.job-status[data-state="complete"] .job-progress i {
+  background: var(--green);
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 58px;
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+}
+
+.stage-index {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--teal);
+  background: #112328;
+  border: 1px solid #28464c;
+}
+
+.stage strong {
+  display: block;
+  font-size: 13px;
+}
+
+.stage > div:nth-child(2) {
+  min-width: 0;
+}
+
+.stage span {
+  display: block;
+  color: var(--faint);
+  font-size: 12px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+}
+
+.status.warn {
+  color: var(--amber);
+}
+
+.status.running {
+  color: var(--blue);
+}
+
+.tabbar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px 0;
+}
+
+.tab {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 7px 7px 0 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border-soft);
+  border-bottom-color: var(--surface-2);
+}
+
+.tab:focus-visible,
+.nav-item:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.artifact {
+  display: none;
+  padding: 14px;
+}
+
+.artifact.active {
+  display: block;
+}
+
+.re-workbench {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 270px;
+  gap: 12px;
+}
+
+.symbol-browser,
+.inspector,
+.code-view {
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: #090c10;
+  overflow: hidden;
+}
+
+.symbol-browser,
+.inspector {
+  min-height: 520px;
+}
+
+.code-head {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  color: var(--faint);
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.code-head span {
+  min-width: 0;
+}
+
+.code-head span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-head span:last-child {
+  flex: 0 0 auto;
+  margin-left: 10px;
+}
+
+.symbol-search-summary {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  color: var(--faint);
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.static-filterbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.static-filterbar button {
+  min-height: 28px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--faint);
+  background: transparent;
+  font: 10px/1 var(--mono);
+  cursor: pointer;
+}
+
+.static-filterbar button.active {
+  color: var(--text);
+  border-color: rgba(72, 199, 189, 0.48);
+  background: rgba(72, 199, 189, 0.12);
+}
+
+.symbol-list {
+  max-height: 424px;
+  overflow: auto;
+}
+
+.symbol-row {
+  width: 100%;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  color: var(--muted);
+  background: transparent;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.symbol-row:hover,
+.symbol-row.active {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.symbol-row mark {
+  color: var(--teal);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.symbol-row strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.symbol-row span {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.badge-dot {
+  width: 24px;
+  min-height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--surface-3);
+  font: 10px/1 var(--mono);
+}
+
+.badge-dot.risk { background: rgba(236, 109, 109, 0.22); color: #ffb2b2; }
+.badge-dot.api { background: rgba(184, 145, 255, 0.22); color: #dac9ff; }
+.badge-dot.net { background: rgba(106, 167, 255, 0.22); color: #c9ddff; }
+.badge-dot.crypto { background: rgba(130, 197, 111, 0.18); color: #ccecc3; }
+
+.code-view {
+  min-height: 520px;
+}
+
+pre {
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  color: #c7d2da;
+  font: 12px/1.7 var(--mono);
+}
+
+.disasm-body {
+  min-height: 484px;
+  max-height: 560px;
+  overflow: auto;
+}
+
+.asm-line {
+  display: grid;
+  grid-template-columns: 118px 68px minmax(0, 1fr);
+  gap: 10px;
+  padding: 2px 12px;
+  color: #c7d2da;
+  font: 12px/1.55 var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.asm-line.active {
+  background: rgba(236, 109, 109, 0.24);
+  box-shadow: inset 3px 0 0 var(--red);
+}
+
+.asm-line .addr { color: #7ba7ff; }
+.asm-line .op { color: #ff8a8a; }
+.asm-line .arg { color: #d8d3aa; }
+.asm-line .comment {
+  grid-column: 3;
+  color: #75c577;
+}
+
+.inspector-section {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.inspector-section:last-child {
+  border-bottom: 0;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kv span:first-child {
+  color: var(--faint);
+}
+
+.kv code {
+  color: var(--text);
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.xref-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font: 12px/1.6 var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.section-map {
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  gap: 3px;
+  margin-top: 10px;
+}
+
+.map-cell {
+  min-height: 18px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: #24303a;
+  cursor: pointer;
+}
+
+.map-cell:hover,
+.map-cell.active {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.map-cell.text { background: #8aa15f; }
+.map-cell.cstring { background: #caa85f; }
+.map-cell.imports { background: #67a0d7; }
+.map-cell.private { background: #a779d8; }
+.map-cell.risk { background: #d56a6a; }
+
+.entropy-strip {
+  height: 28px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.4fr 0.8fr 1fr 0.5fr 2fr;
+  margin-top: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.entropy-strip i:nth-child(1) { background: #8aa15f; }
+.entropy-strip i:nth-child(2) { background: #caa85f; }
+.entropy-strip i:nth-child(3) { background: #67a0d7; }
+.entropy-strip i:nth-child(4) { background: #a779d8; }
+.entropy-strip i:nth-child(5) { background: #d56a6a; }
+.entropy-strip i:nth-child(6) { background: #67a0d7; }
+.entropy-strip i:nth-child(7) { background: #8aa15f; }
+
+.hl-red { color: #ff8a8a; }
+.hl-teal { color: #72e6db; }
+.hl-violet { color: #cdb8ff; }
+.hl-amber { color: #ffc875; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 12px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+
+.side-stack {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.finding-list {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.finding {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  padding: 11px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+.severity {
+  width: 8px;
+  border-radius: 99px;
+}
+
+.severity.high { background: var(--red); }
+.severity.medium { background: var(--amber); }
+.severity.low { background: var(--blue); }
+
+.finding strong {
+  display: block;
+  font-size: 13px;
+}
+
+.finding span {
+  display: block;
+  margin-top: 3px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.tag {
+  align-self: start;
+  padding: 3px 7px;
+  border-radius: 99px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text);
+  background: #27313c;
+}
+
+.device-pane {
+  padding: 12px;
+}
+
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.device-stat {
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+.device-stat span {
+  display: block;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.device-stat strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.traffic {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.traffic-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.traffic-line {
+  height: 7px;
+  background: #0d1116;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.traffic-line i {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+  border-radius: inherit;
+}
+
+.runtime-runner {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.runtime-runner-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.runtime-runner-head strong {
+  font-family: var(--mono);
+  color: var(--amber);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.runtime-runner-head strong.ready {
+  color: var(--green);
+}
+
+.runtime-runner-head strong.live {
+  color: var(--teal);
+}
+
+.runtime-runner p {
+  min-height: 30px;
+  margin: 8px 0 10px;
+  color: var(--faint);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.capture-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 10px 0;
+}
+
+.capture-modes button {
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  color: var(--muted);
+  background: #0d1116;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.capture-modes button.active {
+  color: var(--text);
+  border-color: rgba(72, 199, 189, 0.42);
+  background: rgba(72, 199, 189, 0.12);
+}
+
+.environment-modes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.runtime-field-label {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.execution-target-manager {
+  margin: 8px 0 11px;
+  padding: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  background: #0d1116;
+}
+
+.execution-target-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+  font: 10px/1.35 var(--mono);
+}
+
+.execution-target-head span {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.execution-target-head b {
+  flex: 0 0 auto;
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.execution-target-list {
+  display: grid;
+  gap: 5px;
+}
+
+.execution-target-card {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  gap: 7px;
+  padding: 7px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--faint);
+  background: var(--surface-2);
+  font-size: 10px;
+}
+
+.execution-target-card.selected {
+  border-color: rgba(72, 199, 189, 0.42);
+}
+
+.execution-target-card i {
+  width: 7px;
+  height: 7px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+
+.execution-target-card.ready i,
+.execution-target-card.bundle_match i {
+  background: var(--green);
+}
+
+.execution-target-card strong,
+.execution-target-card span {
+  display: block;
+}
+
+.execution-target-card strong {
+  color: var(--text);
+  font-size: 11px;
+}
+
+.execution-target-card span {
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.execution-target-card code {
+  color: var(--muted);
+  font: 10px/1.3 var(--mono);
+}
+
+.execution-target-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.execution-target-actions button {
+  flex: 1;
+  min-height: 27px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.execution-target-actions button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.preflight-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 7px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.preflight-head button {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.preflight-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.preflight-head button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.preflight-list {
+  display: grid;
+  gap: 5px;
+}
+
+.preflight-check {
+  display: grid;
+  grid-template-columns: 9px minmax(76px, auto) minmax(0, 1fr);
+  gap: 7px;
+  align-items: start;
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.preflight-check i {
+  width: 7px;
+  height: 7px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+
+.preflight-check.pass i {
+  background: var(--green);
+}
+
+.preflight-check.fail i {
+  background: var(--red);
+}
+
+.preflight-check.blocked i {
+  background: var(--amber);
+}
+
+.preflight-check strong {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.preflight-next {
+  margin: 9px 0 10px;
+  padding: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  color: var(--faint);
+  background: #0d1116;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.runtime-runner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.runtime-runner-actions .primary,
+.runtime-runner-actions .ghost {
+  flex: 1;
+  height: 34px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.runtime-runner-actions svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.runtime-runner-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dynamic-workbench {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 290px;
+  gap: 12px;
+}
+
+.runtime-console,
+.runtime-detail,
+.runtime-inspector {
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: #090c10;
+  overflow: hidden;
+}
+
+.runtime-console,
+.runtime-inspector {
+  min-height: 560px;
+}
+
+.capture-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.capture-stat {
+  min-height: 54px;
+  padding: 9px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+.capture-stat span {
+  display: block;
+  color: var(--faint);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.capture-stat strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  font-family: var(--mono);
+}
+
+.runtime-filterbar {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-soft);
+  overflow-x: auto;
+}
+
+.runtime-filterbar button {
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  color: var(--muted);
+  background: #0d1217;
+  font: 11px/1 var(--mono);
+  cursor: pointer;
+}
+
+.runtime-filterbar button.active {
+  color: var(--text);
+  border-color: rgba(114, 230, 219, 0.45);
+  background: #122328;
+}
+
+.event-list {
+  max-height: 410px;
+  overflow: auto;
+}
+
+.event-row {
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.event-row:hover,
+.event-row.active {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.event-time {
+  color: #7ba7ff;
+  font: 10px/1 var(--mono);
+}
+
+.event-row strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.event-row span {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--faint);
+  font: 10px/1.2 var(--mono);
+}
+
+.runtime-severity {
+  align-self: start;
+  padding: 3px 7px;
+  border-radius: 99px;
+  color: var(--text);
+  background: #27313c;
+  font: 10px/1 var(--mono);
+}
+
+.runtime-severity.high { color: #ffd6d6; background: rgba(236, 109, 109, 0.2); }
+.runtime-severity.medium { color: #ffe3b2; background: rgba(230, 173, 79, 0.18); }
+.runtime-severity.low { color: #d9e8ff; background: rgba(106, 167, 255, 0.16); }
+
+.runtime-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.campaign-board {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.campaign-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 9px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.campaign-head strong {
+  color: var(--teal);
+  font: 11px/1 var(--mono);
+}
+
+.campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.campaign-card {
+  min-height: 62px;
+  padding: 8px 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  color: var(--muted);
+  background: var(--surface-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.campaign-card.active {
+  border-color: rgba(72, 199, 189, 0.48);
+  background: rgba(72, 199, 189, 0.1);
+}
+
+.campaign-card strong,
+.campaign-card span,
+.campaign-card b {
+  display: block;
+}
+
+.campaign-card strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.campaign-card span {
+  margin-top: 3px;
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.campaign-card b {
+  margin-top: 6px;
+  color: var(--muted);
+  font: 10px/1 var(--mono);
+}
+
+.campaign-card.observed b {
+  color: var(--green);
+}
+
+.runtime-card {
+  min-height: 72px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+.runtime-card span {
+  display: block;
+  color: var(--faint);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.runtime-card strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 16px;
+  font-family: var(--mono);
+}
+
+.runtime-card p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.timeline-lane {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.timeline-track {
+  position: relative;
+  height: 54px;
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px) 0 0 / 12.5% 100%,
+    #0d1116;
+  border: 1px solid var(--border-soft);
+}
+
+.timeline-dot {
+  position: absolute;
+  top: 17px;
+  width: 18px;
+  height: 18px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 2px solid #0d1116;
+  background: var(--blue);
+  cursor: pointer;
+}
+
+.timeline-dot.high { background: var(--red); }
+.timeline-dot.medium { background: var(--amber); }
+.timeline-dot.low { background: var(--blue); }
+.timeline-dot.active { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+.runtime-evidence {
+  padding: 12px;
+}
+
+.runtime-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font: 12px/1.5 var(--mono);
+}
+
+.runtime-table th,
+.runtime-table td {
+  padding: 8px 10px;
+}
+
+.runtime-table tr.active td {
+  background: rgba(114, 230, 219, 0.08);
+}
+
+.runtime-inspector .kv {
+  grid-template-columns: 76px minmax(0, 1fr);
+}
+
+.stack-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font: 12px/1.55 var(--mono);
+}
+
+.correlation-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.correlation-item {
+  padding: 8px;
+  border-radius: 7px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  font: 11px/1.45 var(--mono);
+}
+
+.notes-workbench {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1fr);
+  gap: 12px;
+}
+
+.notes-workbench .code-view {
+  min-height: 430px;
+}
+
+.note-composer {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.note-composer input,
+.note-composer select,
+.note-composer textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  background: #080c10;
+  font: 13px/1.45 var(--sans);
+  padding: 9px 10px;
+}
+
+.note-composer textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.note-controls,
+.note-evidence-actions,
+.note-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.note-controls select {
+  flex: 1;
+}
+
+.note-evidence {
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  border: 1px dashed var(--border);
+  border-radius: 7px;
+}
+
+.note-evidence span {
+  color: var(--faint);
+  font: 11px/1.4 var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.note-evidence-actions button,
+.note-actions button,
+.batch-panel button {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.note-actions button:disabled,
+.batch-panel button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.note-actions .primary {
+  color: #062225;
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.analyst-note-list {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.analyst-note {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  padding: 10px;
+  background: var(--surface-2);
+}
+
+.analyst-note header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.analyst-note p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.analyst-note .note-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.analyst-note button {
+  justify-self: end;
+  border: 0;
+  color: var(--faint);
+  background: transparent;
+  cursor: pointer;
+}
+
+.bottom-grid {
+  grid-area: bottom;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.58fr);
+  gap: 18px;
+  scroll-margin-top: 84px;
+}
+
+.batch-panel {
+  grid-column: 1 / -1;
+}
+
+.batch-panel[hidden] {
+  display: none;
+}
+
+.batch-panel .panel-head {
+  align-items: center;
+}
+
+.batch-panel button {
+  color: var(--text);
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--faint);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+td {
+  color: var(--muted);
+}
+
+td strong {
+  color: var(--text);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 99px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.pill.red { color: #ffd6d6; background: rgba(236, 109, 109, 0.18); }
+.pill.amber { color: #ffe3b2; background: rgba(230, 173, 79, 0.16); }
+.pill.green { color: #d7f3ce; background: rgba(130, 197, 111, 0.16); }
+.pill.blue { color: #d9e8ff; background: rgba(106, 167, 255, 0.16); }
+
+.explain {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.explain-row {
+  display: grid;
+  grid-template-columns: 104px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.bar {
+  height: 8px;
+  border-radius: 99px;
+  background: #0d1116;
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--teal);
+  border-radius: inherit;
+}
+
+@media (max-width: 1180px) {
+  .app {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .brand-title,
+  .nav-label,
+  .nav-item span,
+  .queue {
+    display: none;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .topbar {
+    grid-template-columns: minmax(170px, 1fr) minmax(190px, 240px) auto;
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .report-select {
+    max-width: 126px;
+  }
+
+  .notes-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-item {
+    justify-content: center;
+  }
+
+  .main {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "intake"
+      "side"
+      "analysis"
+      "evidence"
+      "bottom";
+  }
+
+  .re-workbench,
+  .dynamic-workbench {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .inspector,
+  .runtime-inspector {
+    grid-column: 1 / -1;
+    min-height: auto;
+  }
+
+  .runtime-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .topbar {
+    height: auto;
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .main,
+  .bottom-grid,
+  .intake,
+  .analysis-grid,
+  .re-workbench,
+  .dynamic-workbench,
+  .runtime-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .symbol-browser,
+  .inspector,
+  .runtime-console,
+  .runtime-inspector {
+    min-height: auto;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="Workspace navigation">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24"><path d="M5 8h14M7 4h10l2 4v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8l2-4Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 13h6M9 16h3" stroke="currentColor" stroke-width="1.8"/></svg>
+      </div>
+      <div class="brand-title">
+        <strong>CipherDock</strong>
+        <span>iOS RE workbench</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">Analysis</p>
+      <a class="nav-item active" href="#intake-panel" data-target="intake-panel" aria-label="Workbench">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/><path d="M8 5v14"/></svg>
+        <span>Workbench</span>
+      </a>
+      <a class="nav-item" href="#pipeline-panel" data-target="pipeline-panel" aria-label="Pipelines">
+        <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m17 7 4-4M7 17l-4 4"/></svg>
+        <span>Pipelines</span>
+      </a>
+      <a class="nav-item" href="#runtime-panel" data-target="runtime-panel" aria-label="Devices">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"/><path d="M8 3v4M16 3v4M8 17v4M16 17v4"/></svg>
+        <span>Devices</span>
+      </a>
+      <a class="nav-item" href="#report-panel" data-target="report-panel" aria-label="Reports">
+        <svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 4-4 3 3 5-7"/></svg>
+        <span>Reports</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">Sources</p>
+      <a class="nav-item" href="#intake-panel" data-target="intake-panel" aria-label="IPA Corpus">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>
+        <span>IPA Corpus</span>
+      </a>
+      <a class="nav-item" href="#rules-panel" data-target="rules-panel" aria-label="Rules">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M5 7h14"/><path d="M5 17h14"/></svg>
+        <span>Rules</span>
+      </a>
+    </div>
+
+    <div class="queue">
+      <p class="nav-label">Queue</p>
+      <div class="queue-row">
+        <div><strong>bankid.ipa</strong><span>static pass</span></div>
+        <i class="dot blue"></i>
+      </div>
+      <div class="queue-row">
+        <div><strong>market_alt.ipa</strong><span>review ready</span></div>
+        <i class="dot amber"></i>
+      </div>
+      <div class="queue-row">
+        <div><strong>chatkit.ipa</strong><span>archived</span></div>
+        <i class="dot green"></i>
+      </div>
+    </div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar">
+      <div class="target">
+        <h1>market_alt.ipa</h1>
+        <div class="target-meta">
+          <span>arm64e</span>
+          <span>iOS 18.2 runtime</span>
+          <span>EU third-party store</span>
+          <span>run #A2F7</span>
+        </div>
+      </div>
+      <label class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" fill="none" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2"/></svg>
+        <input id="searchInput" value="" placeholder="Search IPA symbols, strings, runtime events" autocomplete="off">
+      </label>
+      <div class="actions">
+        <select class="report-select" id="reportSelector" aria-label="Saved reports">
+          <option value="">Saved reports</option>
+        </select>
+        <button class="icon-button" type="button" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2 3.4-.2-.1a1.7 1.7 0 0 0-1.9.1 8 8 0 0 1-1.7.7 1.7 1.7 0 0 0-1.2 1.5V23H9.2v-.4A1.7 1.7 0 0 0 8 21.1a8 8 0 0 1-1.7-.7 1.7 1.7 0 0 0-1.9-.1l-.2.1-2-3.4.1-.1A1.7 1.7 0 0 0 2.6 15 8 8 0 0 1 2 13.2 1.7 1.7 0 0 0 .6 12H.3V8h.3A1.7 1.7 0 0 0 2 6.8 8 8 0 0 1 2.6 5a1.7 1.7 0 0 0-.3-1.9l-.1-.1 2-3.4.2.1a1.7 1.7 0 0 0 1.9-.1A8 8 0 0 1 8 .9 1.7 1.7 0 0 0 9.2-.6V-1h3.6v.4A1.7 1.7 0 0 0 14 .9a8 8 0 0 1 1.7.7 1.7 1.7 0 0 0 1.9.1l.2-.1 2 3.4-.1.1a1.7 1.7 0 0 0-.3 1.9 8 8 0 0 1 .6 1.8A1.7 1.7 0 0 0 21.4 8h.3v4h-.3a1.7 1.7 0 0 0-1.4 1.2 8 8 0 0 1-.6 1.8Z"/></svg>
+        </button>
+        <button class="primary" id="runButton" type="button">
+          <span class="spinner" id="runSpinner" hidden></span>
+          <svg id="runIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7Z"/></svg>
+          <span id="runLabel">Run</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="panel" id="intake-panel" data-nav-section="intake-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <strong>Intake</strong>
+            <span>IPA, Mach-O, entitlements, provisioning profile</span>
+          </div>
+          <div class="panel-tools">
+            <button class="tool-button" id="newTargetButton" type="button" title="New target" aria-label="New target">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button class="tool-button" id="importFolderButton" type="button" title="Import folder" aria-label="Import folder">
+              <svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M12 13v4M10 15h4"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="target-manager">
+          <div>
+            <span>Active Target</span>
+            <strong id="activeTargetLabel">market_alt.ipa</strong>
+          </div>
+          <div class="target-manager-actions">
+            <button class="tool-button" id="previousTargetButton" type="button" title="Previous target" aria-label="Previous target">
+              <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button class="tool-button" id="nextTargetButton" type="button" title="Next target" aria-label="Next target">
+              <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <button class="tool-button danger-button" id="deleteTargetButton" type="button" title="Delete active target" aria-label="Delete active target">
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="intake">
+          <div class="dropzone">
+            <div class="dropzone-main">
+              <div class="file-icon" aria-hidden="true">
+                <svg width="30" height="30" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6Z" stroke="currentColor" fill="none" stroke-width="1.8"/><path d="M14 3v5h5M9 13h6M9 16h4" stroke="currentColor" stroke-width="1.8"/></svg>
+              </div>
+              <div class="file-text">
+                <strong>market_alt.ipa</strong>
+                <span>148.7 MB · arm64e · signed</span>
+              </div>
+            </div>
+            <div class="dropzone-actions">
+              <button class="primary" id="sampleButton" type="button">
+                <svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M12 4v12"/><path d="m8 12 4 4 4-4"/></svg>
+                Load Sample
+              </button>
+              <button class="ghost" id="selectIpaButton" type="button">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                Select IPA
+              </button>
+            </div>
+          </div>
+
+          <div class="checklist">
+            <div class="check-item">
+              <strong>Signature</strong>
+              <span id="signatureValue">Developer ID: unknown</span>
+              <div class="meter"><i style="width: 44%; background: var(--amber);"></i></div>
+            </div>
+            <div class="check-item">
+              <strong>Entitlements</strong>
+              <span id="entitlementsValue">5 elevated, 2 private</span>
+              <div class="meter"><i style="width: 72%; background: var(--red);"></i></div>
+            </div>
+            <div class="check-item">
+              <strong>Symbols</strong>
+              <span id="symbolsValue">67% stripped</span>
+              <div class="meter"><i style="width: 67%; background: var(--violet);"></i></div>
+            </div>
+            <div class="check-item">
+              <strong>Runtime</strong>
+              <span id="runtimeValue">No capture loaded</span>
+              <div class="meter"><i style="width: 86%; background: var(--green);"></i></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-stack">
+        <section class="panel" id="findings-panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <strong>Findings</strong>
+              <span id="findingsSummary">Awaiting analysis</span>
+            </div>
+            <button class="tool-button" type="button" title="Filter" aria-label="Filter">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            </button>
+          </div>
+          <div class="finding-list" id="findingList">
+            <div class="finding">
+              <i class="severity high"></i>
+              <div><strong>Keychain item exported</strong><span>kSecAttrAccessibleAlways · AccountStore</span></div>
+              <span class="tag">AI</span>
+            </div>
+            <div class="finding">
+              <i class="severity high"></i>
+              <div><strong>Private framework call</strong><span>AppSupport.framework · CPDistributedMessagingCenter</span></div>
+              <span class="tag">STATIC</span>
+            </div>
+            <div class="finding">
+              <i class="severity medium"></i>
+              <div><strong>TLS pin bypass surface</strong><span>NSURLSessionDelegate override chain</span></div>
+              <span class="tag">DYN</span>
+            </div>
+            <div class="finding">
+              <i class="severity low"></i>
+              <div><strong>Tracker endpoint cluster</strong><span>4 hosts · 2 regions · background task</span></div>
+              <span class="tag">NET</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="runtime-panel" data-nav-section="runtime-panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <strong>Runtime</strong>
+              <span id="runtimePanelSubtitle">No captured execution</span>
+            </div>
+            <div class="actions">
+              <button class="tool-button" id="runtimePlanButton" type="button" title="Open runtime capture plan" aria-label="Open runtime capture plan">
+                <svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5"/><path d="M10 12h6"/><path d="M10 16h6"/></svg>
+              </button>
+              <button class="tool-button" id="hookScriptButton" type="button" title="Open generated Frida hooks" aria-label="Open generated Frida hooks">
+                <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"/><path d="m16 9 4 3-4 3"/><path d="m14 5-4 14"/></svg>
+              </button>
+              <button class="tool-button" id="captureButton" type="button" title="Import runtime capture" aria-label="Import runtime capture">
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="device-pane">
+            <div class="device-grid">
+              <div class="device-stat"><span>Source</span><strong id="runtimeSource">none</strong></div>
+              <div class="device-stat"><span>State</span><strong id="runtimeCaptureState">not captured</strong></div>
+              <div class="device-stat"><span id="runtimeEventMetricLabel">Events</span><strong id="runtimeEventTotal">0</strong></div>
+              <div class="device-stat"><span id="runtimeHighMetricLabel">High</span><strong id="runtimeHighTotal">0</strong></div>
+            </div>
+            <div class="runtime-runner">
+              <div class="runtime-runner-head">
+                <span>Live Capture</span>
+                <strong id="runtimeRunnerStatus">checking</strong>
+              </div>
+              <div class="runtime-field-label">Runtime Environment</div>
+              <div class="capture-modes environment-modes" role="group" aria-label="Runtime environment">
+                <button class="active" type="button" data-runtime-environment="usb">USB iPhone</button>
+                <button type="button" data-runtime-environment="simulator">Xcode Simulator</button>
+              </div>
+              <div class="runtime-field-label">Execution Targets</div>
+              <div class="execution-target-manager" aria-label="Dynamic target manager">
+                <div class="execution-target-head">
+                  <span id="runtimeTargetBundle">No analyzed bundle selected</span>
+                  <b id="runtimeTargetBoundary">unpaired</b>
+                </div>
+                <div class="execution-target-list" id="runtimeTargetList">
+                  <div class="execution-target-card"><i></i><div><strong>Awaiting report</strong><span>Analyze an IPA to resolve execution targets.</span></div></div>
+                </div>
+                <div class="execution-target-actions">
+                  <button id="installCompanionButton" type="button" hidden>Install .app</button>
+                  <button id="launchTargetButton" type="button" disabled>Launch</button>
+                </div>
+              </div>
+              <div class="runtime-field-label">Capture Mode</div>
+              <div class="capture-modes" role="group" aria-label="Capture mode">
+                <button class="active" type="button" data-capture-mode="spawn">Spawn</button>
+                <button type="button" data-capture-mode="attach">Attach</button>
+                <button type="button" data-capture-mode="gadget">Gadget</button>
+              </div>
+              <div class="preflight-head">
+                <span>Runtime Preflight</span>
+                <div class="preflight-actions">
+                  <button id="bootSimulatorButton" type="button" hidden>Boot</button>
+                  <button id="refreshPreflightButton" type="button">Refresh</button>
+                </div>
+              </div>
+              <div class="preflight-list" id="preflightChecks">
+                <div class="preflight-check"><i></i><strong>Status</strong><span>Awaiting target report.</span></div>
+              </div>
+              <p id="runtimeRunnerDetail">Inspecting local instrumentation tools.</p>
+              <div class="preflight-next" id="preflightNextStep">Load an analyzed IPA to check runtime readiness.</div>
+              <div class="runtime-runner-actions">
+                <button class="primary" id="startRuntimeButton" type="button">
+                  <svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z"/></svg>
+                  <span id="startRuntimeLabel">Start</span>
+                </button>
+                <button class="ghost" id="stopRuntimeButton" type="button" disabled>
+                  <svg viewBox="0 0 24 24"><path d="M7 7h10v10H7z"/></svg>
+                  <span>Stop</span>
+                </button>
+              </div>
+            </div>
+            <div class="traffic" id="runtimeOverview">
+              <div class="traffic-row"><span>api.eu</span><div class="traffic-line"><i style="width:82%"></i></div><b>82</b></div>
+              <div class="traffic-row"><span>cdn.us</span><div class="traffic-line"><i style="width:48%; background: var(--amber);"></i></div><b>48</b></div>
+              <div class="traffic-row"><span>ad.sg</span><div class="traffic-line"><i style="width:64%; background: var(--red);"></i></div><b>64</b></div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="panel" id="pipeline-panel" data-nav-section="pipeline-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <strong>Hybrid Analysis</strong>
+            <span>Static extraction, semantic recovery, dynamic behavior</span>
+          </div>
+          <div class="panel-tools">
+            <button class="ghost" id="exportButton" type="button">
+              <svg viewBox="0 0 24 24"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>
+              Export
+            </button>
+          </div>
+        </div>
+        <div class="job-status" id="analysisStatus" data-state="idle">
+          <div class="job-status-row">
+            <div>
+              <strong id="analysisStatusTitle">Ready</strong>
+              <span id="analysisStatusText">Select or load an IPA, then run the hybrid analysis pipeline.</span>
+            </div>
+            <span id="analysisPercent">0%</span>
+          </div>
+          <div class="job-progress" role="progressbar" aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <i id="analysisProgress"></i>
+          </div>
+        </div>
+        <div class="analysis-grid">
+          <div class="score-card">
+            <div class="ring">
+              <div class="ring-value"><strong>66</strong><span>elevated</span></div>
+            </div>
+            <div class="score-list" id="scoreRows">
+              <div class="score-row"><span>Awaiting analysis</span><b>-</b></div>
+            </div>
+          </div>
+          <div class="stage-list">
+            <div class="stage">
+              <div class="stage-index">01</div>
+              <div><strong>Unpack</strong><span>Mach-O, embedded frameworks, plist, profile</span></div>
+              <span class="status">done</span>
+            </div>
+            <div class="stage">
+              <div class="stage-index">02</div>
+              <div><strong>Static</strong><span>Mach-O parser, optional Ghidra, class metadata, strings</span></div>
+              <span class="status">done</span>
+            </div>
+            <div class="stage">
+              <div class="stage-index">03</div>
+              <div><strong>Analyst Notes</strong><span>Evidence summaries, symbol categories, private API markers</span></div>
+              <span class="status warn">review</span>
+            </div>
+            <div class="stage">
+              <div class="stage-index">04</div>
+              <div><strong>Dynamic</strong><span>Frida Simulator/device capture, network, storage, privacy</span></div>
+              <span class="status">live</span>
+            </div>
+            <div class="stage">
+              <div class="stage-index">05</div>
+              <div><strong>Score</strong><span>Deterministic weighted security findings</span></div>
+              <span class="status">done</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="evidence-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <strong>Evidence</strong>
+            <span>Recovered code, binary features, runtime signals</span>
+          </div>
+        </div>
+        <div class="tabbar" role="tablist" aria-label="Evidence views">
+          <button class="tab active" type="button" data-tab="static">Static</button>
+          <button class="tab" type="button" data-tab="dynamic">Dynamic</button>
+          <button class="tab" type="button" data-tab="ai">AI Notes</button>
+        </div>
+        <div class="artifact active" id="static">
+          <div class="re-workbench">
+            <aside class="symbol-browser" aria-label="Static analysis results">
+              <div class="code-head"><span>Recovered Items</span><span id="analysisResultCount">0</span></div>
+              <div class="symbol-search-summary">
+                <span id="analysisSearchMode">dataset search</span>
+                <span id="analysisSearchScope">symbols · strings · imports</span>
+              </div>
+              <div class="static-filterbar" id="staticFilterbar" aria-label="Static artifact views">
+                <button class="active" type="button" data-static-filter="all">All</button>
+                <button type="button" data-static-filter="symbol">Symbols</button>
+                <button type="button" data-static-filter="import">Imports</button>
+                <button type="button" data-static-filter="section">Sections</button>
+                <button type="button" data-static-filter="string">Strings</button>
+                <button type="button" data-static-filter="runtime-link">Runtime Xrefs</button>
+              </div>
+              <div class="symbol-list" id="symbolList"></div>
+            </aside>
+            <div class="code-view" aria-label="Disassembly evidence">
+              <div class="code-head"><span id="disasmTitle">Analysis item</span><span id="disasmMeta">arm64e</span></div>
+              <div class="disasm-body" id="disasmBody"></div>
+            </div>
+            <aside class="inspector" aria-label="Selected analysis item details">
+              <div class="code-head"><span>Inspector</span><span id="inspectorKind">symbol</span></div>
+              <div class="inspector-section" id="fileInfo"></div>
+              <div class="inspector-section" id="addressInfo"></div>
+              <div class="inspector-section">
+                <strong>Entropy / Sections</strong>
+                <div class="entropy-strip" id="entropyStrip" aria-label="Entropy strip">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="section-map" id="sectionMap" aria-label="Mach-O section map"></div>
+                <div class="legend">
+                  <span><i style="background:#8aa15f"></i>__text</span>
+                  <span><i style="background:#caa85f"></i>cstring</span>
+                  <span><i style="background:#67a0d7"></i>imports</span>
+                  <span><i style="background:#a779d8"></i>private API</span>
+                  <span><i style="background:#d56a6a"></i>risk</span>
+                </div>
+              </div>
+              <div class="inspector-section">
+                <strong>Xrefs / Evidence</strong>
+                <ul class="xref-list" id="xrefList"></ul>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="artifact" id="dynamic">
+          <div class="dynamic-workbench">
+            <aside class="runtime-console" aria-label="Runtime event stream">
+              <div class="code-head"><span id="runtimeListTitle">Runtime Events</span><span id="runtimeResultCount">0</span></div>
+              <div class="capture-stats">
+                <div class="capture-stat"><span>Session</span><strong id="runtimeSessionValue">none</strong></div>
+                <div class="capture-stat"><span>State</span><strong id="runtimeState">not captured</strong></div>
+                <div class="capture-stat"><span id="runtimeFlowLabel">Events</span><strong id="runtimeFlowValue">0</strong></div>
+                <div class="capture-stat"><span id="runtimeHookLabel">High</span><strong id="runtimeHookValue">0</strong></div>
+              </div>
+              <div class="runtime-filterbar" id="runtimeFilterbar" aria-label="Runtime event filters">
+                <button class="active" type="button" data-runtime-filter="all">all</button>
+                <button type="button" data-runtime-filter="network">network</button>
+                <button type="button" data-runtime-filter="keychain">keychain</button>
+                <button type="button" data-runtime-filter="file">file</button>
+                <button type="button" data-runtime-filter="process">process</button>
+              </div>
+              <div class="event-list" id="runtimeEventList"></div>
+            </aside>
+            <section class="runtime-detail" aria-label="Runtime behavior details">
+              <div class="code-head"><span id="runtimeTitle">Runtime event</span><span id="runtimeMeta">live trace</span></div>
+              <div class="campaign-board">
+                <div class="campaign-head"><span>Assessment Campaigns</span><strong id="campaignCoverage">0/0 observed</strong></div>
+                <div class="campaign-grid" id="campaignList"></div>
+              </div>
+              <div class="runtime-summary" id="runtimeSummary"></div>
+              <div class="timeline-lane">
+                <div class="code-head"><span id="runtimeTimelineTitle">Behavior Timeline</span><span id="runtimeWindow">00:00-00:08</span></div>
+                <div class="timeline-track" id="runtimeTimeline" aria-label="Runtime timeline"></div>
+              </div>
+              <div class="runtime-evidence">
+                <div class="table-wrap">
+                  <table class="runtime-table">
+                    <thead id="runtimeTableHead"><tr><th>Time</th><th>Layer</th><th>Operation</th><th>Observed Value</th><th>Verdict</th></tr></thead>
+                    <tbody id="runtimeTraceRows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+            <aside class="runtime-inspector" aria-label="Runtime event inspector">
+              <div class="code-head"><span id="runtimeInspectorTitle">Runtime Inspector</span><span id="runtimeSeverity">event</span></div>
+              <div class="inspector-section" id="runtimeEventInfo"></div>
+              <div class="inspector-section">
+                <strong>Call Stack / Hook</strong>
+                <ul class="stack-list" id="runtimeStack"></ul>
+              </div>
+              <div class="inspector-section">
+                <strong>Static Correlation</strong>
+                <div class="correlation-list" id="runtimeCorrelation"></div>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="artifact" id="ai">
+          <div class="notes-workbench">
+            <section class="code-view" aria-label="Generated evidence synthesis">
+              <div class="code-head"><span>Evidence Synthesis</span><span id="notesSource">not generated</span></div>
+              <div class="finding-list" id="aiNotesList"></div>
+            </section>
+            <section class="code-view" aria-label="Analyst notebook">
+              <div class="code-head"><span>Analyst Notebook</span><span id="analystNotesState">0 saved</span></div>
+              <div class="note-composer">
+                <input id="analystNoteTitle" type="text" maxlength="180" placeholder="Finding or hypothesis title">
+                <div class="note-controls">
+                  <select id="analystNoteSeverity" aria-label="Note severity">
+                    <option value="info">Info</option>
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                  <select id="analystNoteStatus" aria-label="Note status">
+                    <option value="open" selected>Open</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="mitigated">Mitigated</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="dismissed">Dismissed</option>
+                  </select>
+                </div>
+                <textarea id="analystNoteBody" maxlength="6000" placeholder="Analyst conclusion, reproduction detail, or next action"></textarea>
+                <div class="note-evidence">
+                  <span id="linkedEvidenceLabel">No evidence linked</span>
+                  <div class="note-evidence-actions">
+                    <button id="linkStaticEvidenceButton" type="button">Link Static</button>
+                    <button id="linkRuntimeEvidenceButton" type="button">Link Runtime</button>
+                  </div>
+                </div>
+                <div class="note-actions">
+                  <button class="primary" id="saveAnalystNoteButton" type="button">Save Note</button>
+                  <button id="exportAnalystNotesButton" type="button">Export Notes</button>
+                </div>
+              </div>
+              <div class="analyst-note-list" id="analystNoteList"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <div class="bottom-grid" id="report-panel" data-nav-section="report-panel">
+        <section class="panel batch-panel" id="batchPanel" hidden>
+          <div class="panel-head">
+            <div class="panel-title">
+              <strong>Batch Reports</strong>
+              <span id="batchMeta">No batch run loaded</span>
+            </div>
+            <button id="openBatchIndexButton" type="button">Open Dashboard</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Application</th><th>Bundle</th><th>Score</th><th>Findings</th><th>Runtime</th><th>Report</th></tr>
+              </thead>
+              <tbody id="batchRows"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="panel" id="rules-panel" data-nav-section="rules-panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <strong>Issue Matrix</strong>
+              <span>Ranked by score contribution</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Signal</th><th>Layer</th><th>Evidence</th><th>Weight</th><th>Status</th></tr>
+              </thead>
+              <tbody id="issueRows">
+                <tr><td colspan="5">Load an analyzed IPA to view scored findings.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <strong>Explainability</strong>
+              <span>Risk-score contributors</span>
+            </div>
+          </div>
+          <div class="explain" id="scoreContributorRows">
+            <div class="explain-row"><span>Awaiting analysis</span><div class="bar"><i style="width:0%;"></i></div><b>-</b></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<input class="hidden-input" id="ipaInput" type="file" accept=".ipa,application/zip">
+<input class="hidden-input" id="folderInput" type="file" webkitdirectory directory multiple>
+<input class="hidden-input" id="traceInput" type="file" accept=".json,.jsonl,application/json">
+<input class="hidden-input" id="companionAppInput" type="file" webkitdirectory directory multiple>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const navItems = Array.from(document.querySelectorAll('.nav-item[data-target]'));
+
+function setActiveNav(targetId, activeItem) {
+  navItems.forEach((item) => {
+    item.classList.toggle('active', activeItem ? item === activeItem : item.dataset.target === targetId);
+  });
+}
+
+navItems.forEach((item) => {
+  item.addEventListener('click', (event) => {
+    const target = document.getElementById(item.dataset.target);
+    if (!target) return;
+    event.preventDefault();
+    const top = target.getBoundingClientRect().top + window.scrollY - 84;
+    setActiveNav(item.dataset.target, item);
+    history.replaceState(null, '', item.getAttribute('href'));
+    window.scrollTo({ top, behavior: 'smooth' });
+  });
+});
+
+const tabs = Array.from(document.querySelectorAll('.tab'));
+tabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    tabs.forEach((t) => t.classList.remove('active'));
+    document.querySelectorAll('.artifact').forEach((panel) => panel.classList.remove('active'));
+    tab.classList.add('active');
+    tabs.forEach((t) => t.setAttribute('aria-selected', t === tab ? 'true' : 'false'));
+    const panel = document.getElementById(tab.dataset.tab);
+    if (panel) panel.classList.add('active');
+    showToast(tab.textContent.trim() + ' evidence opened');
+  });
+});
+
+const runButton = document.getElementById('runButton');
+const runSpinner = document.getElementById('runSpinner');
+const runIcon = document.getElementById('runIcon');
+const runLabel = document.getElementById('runLabel');
+const sampleButton = document.getElementById('sampleButton');
+const newTargetButton = document.getElementById('newTargetButton');
+const importFolderButton = document.getElementById('importFolderButton');
+const selectIpaButton = document.getElementById('selectIpaButton');
+const previousTargetButton = document.getElementById('previousTargetButton');
+const nextTargetButton = document.getElementById('nextTargetButton');
+const deleteTargetButton = document.getElementById('deleteTargetButton');
+const captureButton = document.getElementById('captureButton');
+const runtimePlanButton = document.getElementById('runtimePlanButton');
+const hookScriptButton = document.getElementById('hookScriptButton');
+const startRuntimeButton = document.getElementById('startRuntimeButton');
+const stopRuntimeButton = document.getElementById('stopRuntimeButton');
+const exportButton = document.getElementById('exportButton');
+const reportSelector = document.getElementById('reportSelector');
+const activeTargetLabel = document.getElementById('activeTargetLabel');
+const ipaInput = document.getElementById('ipaInput');
+const folderInput = document.getElementById('folderInput');
+const traceInput = document.getElementById('traceInput');
+const companionAppInput = document.getElementById('companionAppInput');
+const searchInput = document.getElementById('searchInput');
+const analystNoteTitle = document.getElementById('analystNoteTitle');
+const analystNoteSeverity = document.getElementById('analystNoteSeverity');
+const analystNoteStatus = document.getElementById('analystNoteStatus');
+const analystNoteBody = document.getElementById('analystNoteBody');
+const saveAnalystNoteButton = document.getElementById('saveAnalystNoteButton');
+const exportAnalystNotesButton = document.getElementById('exportAnalystNotesButton');
+const linkStaticEvidenceButton = document.getElementById('linkStaticEvidenceButton');
+const linkRuntimeEvidenceButton = document.getElementById('linkRuntimeEvidenceButton');
+const openBatchIndexButton = document.getElementById('openBatchIndexButton');
+const refreshPreflightButton = document.getElementById('refreshPreflightButton');
+const bootSimulatorButton = document.getElementById('bootSimulatorButton');
+const installCompanionButton = document.getElementById('installCompanionButton');
+const launchTargetButton = document.getElementById('launchTargetButton');
+const startRuntimeLabel = document.getElementById('startRuntimeLabel');
+const captureModeButtons = Array.from(document.querySelectorAll('[data-capture-mode]'));
+const runtimeEnvironmentButtons = Array.from(document.querySelectorAll('[data-runtime-environment]'));
+const toast = document.getElementById('toast');
+const stages = Array.from(document.querySelectorAll('.stage .status'));
+const analysisStatus = document.getElementById('analysisStatus');
+const analysisStatusTitle = document.getElementById('analysisStatusTitle');
+const analysisStatusText = document.getElementById('analysisStatusText');
+const analysisPercent = document.getElementById('analysisPercent');
+const analysisProgress = document.getElementById('analysisProgress');
+let searchTimer = 0;
+let newTargetCount = 0;
+let analysisInProgress = false;
+let analysisTimers = [];
+const targetProfiles = {};
+let selectedAnalysisItemId = '';
+let staticFilter = 'all';
+let selectedRuntimeEventId = '';
+let runtimeFilter = 'all';
+let runtimeViewMode = 'captured';
+let runtimeCampaigns = [];
+let selectedRuntimeCampaignId = 'all';
+let serviceAvailable = false;
+let pendingIpaFiles = [];
+let pendingTraceFile = null;
+let activeReportId = '';
+let activeReportPayload = null;
+let jobPollTimer = 0;
+let runtimeSessionId = '';
+let runtimeSessionPollTimer = 0;
+let runtimeCapability = null;
+let runtimePreflight = null;
+let runtimePreflightRequest = 0;
+let runtimeCaptureMode = 'spawn';
+let runtimeEnvironment = localStorage.getItem('ire-zero-runtime-environment') === 'simulator' ? 'simulator' : 'usb';
+let simulatorBootAttemptKey = '';
+let simulatorBootInProgress = false;
+let runtimeTargets = null;
+let runtimeTargetsRequest = 0;
+let targetActionInProgress = false;
+let linkedAnalystEvidence = [];
+let latestBatchIndexUrl = '';
+
+const sampleProfiles = {
+  default: {
+    name: 'market_alt.ipa',
+    meta: ['arm64e', 'iOS 18.2 runtime', 'EU third-party store', 'run #A2F7'],
+    fileMeta: '148.7 MB · arm64e · signed',
+    score: 66,
+    scoreLabel: 'elevated',
+    queueStatus: 'review ready',
+    dotColor: 'amber'
+  },
+  synthetic: {
+    name: 'SyntheticRisk.ipa',
+    meta: ['arm64', 'static fixture', 'local sample', 'run #SYN1'],
+    fileMeta: '2.4 KB · arm64 · unsigned fixture',
+    score: 100,
+    scoreLabel: 'critical',
+    queueStatus: 'analysis ready',
+    dotColor: 'amber'
+  },
+  bank: {
+    name: 'bankid.ipa',
+    meta: ['arm64', 'iOS 17.6 runtime', 'finance sample', 'run #B201'],
+    fileMeta: '96.2 MB · arm64 · signed',
+    score: 39,
+    scoreLabel: 'guarded',
+    queueStatus: 'static pass',
+    dotColor: 'blue'
+  },
+  chatkit: {
+    name: 'chatkit.ipa',
+    meta: ['arm64e', 'iOS 16.4 runtime', 'archived corpus', 'run #C044'],
+    fileMeta: '72.9 MB · arm64e · signed',
+    score: 18,
+    scoreLabel: 'low',
+    queueStatus: 'archived',
+    dotColor: 'green'
+  }
+};
+
+let analysisDataset = [
+  {
+    id: 'objc-sync-token',
+    kind: 'ObjC method',
+    name: '-[AccountStore syncTokenWithContext:]',
+    address: '0x100018e8c',
+    segment: '__TEXT',
+    section: '__text',
+    offset: '0x18e8c',
+    size: '0x1c4',
+    confidence: '0.78',
+    risk: 'high',
+    tags: ['keychain', 'token', 'private message', 'objc_msgSend'],
+    summary: 'Writes an account token into the keychain and signals a helper through a private messaging API.',
+    xrefs: ['_SecItemAdd', '_kSecAttrAccessibleAlways', '_CPDistributedMessagingCenter_sendMessageName_userInfo', 'finding: hardcoded keychain accessibility'],
+    mapClass: 'risk',
+    disasm: [
+      ['0x100018e8c', 'STP', 'X29, X30, [SP,#-0x30]!', 'prolog'],
+      ['0x100018e90', 'MOV', 'X29, SP', 'frame setup'],
+      ['0x100018e94', 'BL', '_objc_msgSend', 'selector: tokenForContext:'],
+      ['0x100018e98', 'ADRP', 'X8, _kSecAttrAccessibleAlways@PAGE', 'keychain accessibility constant'],
+      ['0x100018e9c', 'LDR', 'X2, [X8, _kSecAttrAccessibleAlways@PAGEOFF]', 'value flows into query dictionary'],
+      ['0x100018ea0', 'BL', '_SecItemAdd', 'writes token material', true],
+      ['0x100018ea4', 'STR', 'X0, [SP,#0x68]', 'OSStatus retained'],
+      ['0x100018ea8', 'BL', '_CPDistributedMessagingCenter_sendMessageName_userInfo', 'private cross-process notification', true],
+      ['0x100018eac', 'LDP', 'X29, X30, [SP],#0x30', 'epilog'],
+      ['0x100018eb0', 'RET', '', '']
+    ]
+  },
+  {
+    id: 'swift-urlsession',
+    kind: 'Swift symbol',
+    name: 'FeedService.fetchTimeline(account:cursor:)',
+    address: '0x10002b430',
+    segment: '__TEXT',
+    section: '__text',
+    offset: '0x2b430',
+    size: '0x25c',
+    confidence: '0.71',
+    risk: 'medium',
+    tags: ['URLSession', 'CFNetwork', 'endpoint', 'json'],
+    summary: 'Builds URLComponents and dispatches a URLSession data task for timeline synchronization.',
+    xrefs: ['Foundation.URLComponents', 'Foundation.URLRequest', 'CFNetwork.framework', 'string: /api/v1/timelines/home'],
+    mapClass: 'net',
+    disasm: [
+      ['0x10002b430', 'PACIBSP', '', 'arm64e pointer auth'],
+      ['0x10002b438', 'ADRP', 'X9, cfstr_api_v1_timelines_home@PAGE', 'endpoint string'],
+      ['0x10002b43c', 'ADD', 'X9, X9, cfstr_api_v1_timelines_home@PAGEOFF', '"/api/v1/timelines/home"'],
+      ['0x10002b448', 'BL', '_$s10Foundation13URLComponentsV6schemeSSSgvs', 'scheme = https'],
+      ['0x10002b464', 'BL', '_$s10Foundation10URLRequestV10httpMethodSSSgvs', 'GET'],
+      ['0x10002b498', 'BL', '_$s10Foundation10URLSessionC8dataTask', 'network request', true],
+      ['0x10002b4a0', 'BL', '_swift_task_switch', 'async continuation'],
+      ['0x10002b4c0', 'RETAB', '', '']
+    ]
+  },
+  {
+    id: 'string-instance',
+    kind: 'String',
+    name: 'https://mastodon.social/api/v1/apps',
+    address: '0x10041c028',
+    segment: '__TEXT',
+    section: '__cstring',
+    offset: '0x41c028',
+    size: '0x23',
+    confidence: '0.94',
+    risk: 'low',
+    tags: ['url', 'endpoint', 'registration', 'https'],
+    summary: 'Recovered HTTPS endpoint used for app registration or OAuth client bootstrapping.',
+    xrefs: ['FeedService.registerApplication', 'URLComponents.init(string:)', 'Info.plist CFBundleURLTypes'],
+    mapClass: 'cstring',
+    disasm: [
+      ['0x10041c028', 'DB', '"https://mastodon.social/api/v1/apps"', 'cstring literal', true],
+      ['0x10022f8d4', 'ADRP', 'X0, 0x10041c000', 'loads endpoint page'],
+      ['0x10022f8dc', 'ADD', 'X0, X0, #0x28', 'argument to URLComponents'],
+      ['0x10022f8e8', 'BL', '_$s10Foundation13URLComponentsV6stringACSgSSh_tcfC', 'parse URL']
+    ]
+  },
+  {
+    id: 'import-crypto',
+    kind: 'Import',
+    name: '/System/Library/Frameworks/CryptoKit.framework/CryptoKit',
+    address: 'LC_LOAD_DYLIB',
+    segment: '__LINKEDIT',
+    section: 'imports',
+    offset: '0x5a390',
+    size: '0x48',
+    confidence: '0.86',
+    risk: 'info',
+    tags: ['crypto', 'framework', 'otool', 'linked library'],
+    summary: 'Linked CryptoKit framework. Useful for tracing signing, hashing, and encrypted storage behavior.',
+    xrefs: ['otool -L', 'symbol category: crypto', 'CryptoKit.SHA256', 'CryptoKit.SymmetricKey'],
+    mapClass: 'imports',
+    disasm: [
+      ['0x1000002e0', 'LC_LOAD_DYLIB', 'CryptoKit.framework/CryptoKit', 'Mach-O load command'],
+      ['0x1000002e8', 'DB', 'current version 1.0.0', 'dylib metadata'],
+      ['0x1000002f8', 'DB', 'compatibility version 1.0.0', 'dylib metadata'],
+      ['0x1002d44f0', 'BL', '_$s9CryptoKit6SHA256V4hash4dataAC6DigestVx_t7ElementQyd__RszSTRd__lFZ', 'hash callsite', true]
+    ]
+  },
+  {
+    id: 'private-lsapp',
+    kind: 'Private API',
+    name: 'LSApplicationWorkspace',
+    address: '0x10037b144',
+    segment: '__TEXT',
+    section: '__objc_classrefs',
+    offset: '0x37b144',
+    size: '0x08',
+    confidence: '0.69',
+    risk: 'high',
+    tags: ['private api', 'workspace', 'installed apps', 'LSApplicationQueriesSchemes'],
+    summary: 'Private LaunchServices workspace reference. This can indicate installed-app enumeration beyond public URL-scheme checks.',
+    xrefs: ['objc classref', 'selector allInstalledApplications', 'heuristic: private API usage'],
+    mapClass: 'private',
+    disasm: [
+      ['0x10037b144', 'DQ', '_OBJC_CLASS_$_LSApplicationWorkspace', 'class reference', true],
+      ['0x10019d8d0', 'ADRP', 'X0, _OBJC_CLASSLIST_REFERENCES_$@PAGE', 'load classref'],
+      ['0x10019d8d8', 'BL', '_objc_msgSend', 'defaultWorkspace'],
+      ['0x10019d8ec', 'BL', '_objc_msgSend', 'allInstalledApplications', true],
+      ['0x10019d900', 'CBZ', 'X0, loc_10019d948', 'empty result guard']
+    ]
+  },
+  {
+    id: 'jailbreak-detector',
+    kind: 'Heuristic',
+    name: 'Jailbreak path probe cluster',
+    address: '0x10031a9e0',
+    segment: '__TEXT',
+    section: '__cstring',
+    offset: '0x31a9e0',
+    size: '0x96',
+    confidence: '0.82',
+    risk: 'medium',
+    tags: ['jailbreak', 'cydia', 'substrate', 'frida', 'file exists'],
+    summary: 'Multiple jailbreak/tooling indicators are present near a file-existence probe routine.',
+    xrefs: ['/Applications/Cydia.app', '/Library/MobileSubstrate/MobileSubstrate.dylib', 'frida-server', 'FileManager.fileExists(atPath:)'],
+    mapClass: 'risk',
+    disasm: [
+      ['0x10031a9e0', 'DB', '"/Applications/Cydia.app"', 'jailbreak path', true],
+      ['0x10031aa00', 'DB', '"/Library/MobileSubstrate/MobileSubstrate.dylib"', 'substrate path', true],
+      ['0x10031aa38', 'DB', '"frida-server"', 'instrumentation marker', true],
+      ['0x1001d7120', 'BL', '_$s10Foundation11FileManagerC10fileExists6atPathSbSS_tF', 'path probe'],
+      ['0x1001d7134', 'TBNZ', 'W0, #0, loc_1001d71c8', 'positive signal branch']
+    ]
+  },
+  {
+    id: 'plist-ats',
+    kind: 'Plist',
+    name: 'NSAppTransportSecurity',
+    address: 'Info.plist',
+    segment: 'bundle',
+    section: 'plist',
+    offset: 'n/a',
+    size: 'dictionary',
+    confidence: '0.90',
+    risk: 'medium',
+    tags: ['ATS', 'transport security', 'NSAllowsArbitraryLoads', 'plist'],
+    summary: 'ATS policy should be reviewed for broad exceptions or arbitrary HTTP loads.',
+    xrefs: ['Info.plist', 'CFBundleIdentifier', 'heuristic: transport security issues'],
+    mapClass: 'risk',
+    disasm: [
+      ['Info.plist', 'KEY', 'NSAppTransportSecurity', 'transport policy root'],
+      ['Info.plist', 'KEY', 'NSAllowsArbitraryLoads', 'flagged when true', true],
+      ['Info.plist', 'KEY', 'NSExceptionDomains', 'review per-domain exceptions']
+    ]
+  },
+  {
+    id: 'section-text',
+    kind: 'Mach-O section',
+    name: '__TEXT.__text',
+    address: '0x100006320',
+    segment: '__TEXT',
+    section: '__text',
+    offset: '0x6320',
+    size: '0x2e7f4',
+    confidence: '1.00',
+    risk: 'info',
+    tags: ['section', 'code', 'arm64e', 'procedures'],
+    summary: 'Primary executable code section with recovered callsites, branch targets, and symbol references.',
+    xrefs: ['423 recovered procedures', '12 private API references', '8 endpoint xrefs'],
+    mapClass: 'text',
+    disasm: [
+      ['0x100006320', 'SECTION', '__TEXT.__text', 'S_ATTR_PURE_INSTRUCTIONS'],
+      ['0x100006320', 'RANGE', '0x100006320..0x10002eb14', '190452 bytes'],
+      ['0x100018e8c', 'PROC', '-[AccountStore syncTokenWithContext:]', 'selected high-risk procedure'],
+      ['0x10002b430', 'PROC', 'FeedService.fetchTimeline(account:cursor:)', 'network procedure']
+    ]
+  }
+];
+
+let sectionCells = [
+  'text','text','text','cstring','imports','text','private','risk','text','cstring','imports','text','text','risk','text','imports','cstring','text',
+  'text','text','cstring','text','imports','private','text','text','risk','cstring','text','imports','text','text','private','text','cstring','text',
+  'text','imports','text','cstring','text','risk','text','text','private','imports','text','cstring','text','text','risk','imports','text','text',
+  'cstring','text','text','imports','private','text','risk','text','cstring','text','imports','text','text','private','text','cstring','imports','text'
+];
+
+let runtimeEvents = [
+  {
+    id: 'rt-launch',
+    time: '00:00.412',
+    position: 6,
+    layer: 'process',
+    severity: 'low',
+    title: 'Process launch under supervised runtime',
+    operation: 'execve',
+    value: 'Payload/Mastodon.app/Mastodon --foreground',
+    verdict: 'baseline',
+    summary: 'App launched in an instrumented, jailbreak-free session with Frida hooks attached before first network call.',
+    stack: ['dyld start', '__libc_start_main', 'UIApplicationMain', 'SwiftUI.App.main'],
+    correlation: ['Mach-O loader: arm64e thin binary', 'Entitlements loaded before UIApplicationMain', 'No debugger-detection exit observed']
+  },
+  {
+    id: 'rt-keychain-add',
+    time: '00:03.801',
+    position: 36,
+    layer: 'keychain',
+    severity: 'high',
+    title: 'Keychain write uses broad accessibility',
+    operation: 'SecItemAdd',
+    value: 'service=com.alt.market.account access=kSecAttrAccessibleAlways',
+    verdict: 'finding: exported token risk',
+    summary: 'Runtime confirms token material is written through SecItemAdd with an accessibility class that should be reviewed.',
+    stack: ['-[AccountStore syncTokenWithContext:]', '_SecItemAdd', 'securityd xpc_submit', 'com.apple.securityd'],
+    correlation: ['Static hit: _SecItemAdd at 0x100018ea0', 'String: kSecAttrAccessibleAlways', 'Finding: Keychain item exported']
+  },
+  {
+    id: 'rt-network-ad',
+    time: '00:04.229',
+    position: 44,
+    layer: 'network',
+    severity: 'high',
+    title: 'Background tracker endpoint contacted',
+    operation: 'URLSessionTask resume',
+    value: 'POST https://collect.ad.sg/v2/batch tls=TLS1.3 bytes=18.4KB',
+    verdict: 'finding: suspicious network endpoint',
+    summary: 'A non-primary analytics host receives a batched payload shortly after account synchronization.',
+    stack: ['FeedService.flushTelemetry()', 'URLSession.dataTask(with:)', 'CFNetwork HTTPProtocol', 'boringssl_context_handshake'],
+    correlation: ['Static URL-like string cluster', 'Runtime host: collect.ad.sg', 'Issue Matrix: Tracker fanout +5.6']
+  },
+  {
+    id: 'rt-file-cache',
+    time: '00:05.028',
+    position: 54,
+    layer: 'file',
+    severity: 'medium',
+    title: 'Session database opened in caches',
+    operation: 'open',
+    value: '/Library/Caches/session.db flags=O_RDWR|O_CREAT',
+    verdict: 'review persistence',
+    summary: 'Session-related storage appears under Caches rather than a protected application support location.',
+    stack: ['SessionStore.openDatabase()', 'sqlite3_open_v2', 'open', 'sandboxd allow file-write-create'],
+    correlation: ['Runtime trace: session.db', 'Static import: libsqlite3.dylib', 'Heuristic: sensitive cache storage']
+  },
+  {
+    id: 'rt-pasteboard',
+    time: '00:05.316',
+    position: 58,
+    layer: 'process',
+    severity: 'medium',
+    title: 'Pasteboard read after foreground activation',
+    operation: 'UIPasteboard.string',
+    value: 'general pasteboard read, length=64',
+    verdict: 'privacy review',
+    summary: 'The app reads the general pasteboard shortly after activation. Confirm user intent before accepting.',
+    stack: ['SceneDelegate.sceneDidBecomeActive', 'UIPasteboard.general', 'UIPasteboard.string', 'objc_msgSend'],
+    correlation: ['Suspicious keyword: pasteboard', 'Static selector: generalPasteboard', 'Privacy surface: clipboard access']
+  },
+  {
+    id: 'rt-bg-task',
+    time: '00:05.740',
+    position: 65,
+    layer: 'process',
+    severity: 'low',
+    title: 'Background refresh task registered',
+    operation: 'BGTaskScheduler.register',
+    value: 'identifier=com.alt.market.refresh earliestBegin=15m',
+    verdict: 'expected but monitor',
+    summary: 'Background task registration is legitimate, but correlates with network fanout and token refresh behavior.',
+    stack: ['BackgroundRefresh.install()', 'BGTaskScheduler.register', 'dispatch_async', 'UIApplicationDelegate'],
+    correlation: ['Info.plist: permitted background identifiers', 'Runtime: network fanout follows registration', 'Dynamic score contributor: +2.1']
+  },
+  {
+    id: 'rt-frida-probe',
+    time: '00:06.118',
+    position: 72,
+    layer: 'file',
+    severity: 'medium',
+    title: 'Instrumentation path probe',
+    operation: 'stat64',
+    value: '/usr/sbin/frida-server errno=ENOENT',
+    verdict: 'jailbreak-detection logic',
+    summary: 'Runtime observes path checks for common instrumentation markers. No positive hit in the clean session.',
+    stack: ['DeviceIntegrity.scanPaths()', 'FileManager.fileExists(atPath:)', 'stat64', 'sandbox_check'],
+    correlation: ['Static cluster: frida-server', 'Static cluster: Cydia.app', 'Heuristic: jailbreak detection logic']
+  },
+  {
+    id: 'rt-message-center',
+    time: '00:07.421',
+    position: 88,
+    layer: 'process',
+    severity: 'high',
+    title: 'Private message center notification',
+    operation: 'CPDistributedMessagingCenter send',
+    value: 'name=AccountTokenDidChange userInfo={account, state}',
+    verdict: 'private API behavior',
+    summary: 'Runtime confirms a private cross-process notification after account token mutation.',
+    stack: ['-[AccountStore syncTokenWithContext:]', '_CPDistributedMessagingCenter_sendMessageName_userInfo', 'rocketbootstrap_send', 'mach_msg'],
+    correlation: ['Static hit: private messaging call', 'Finding: Private framework call', 'Keychain event at 00:03.801']
+  }
+];
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+function clearAnalysisTimers() {
+  analysisTimers.forEach((timer) => clearTimeout(timer));
+  analysisTimers = [];
+}
+
+function setRunLoading(isLoading) {
+  analysisInProgress = isLoading;
+  runButton.disabled = isLoading || !activeQueueName();
+  runSpinner.hidden = !isLoading;
+  runIcon.hidden = isLoading;
+  runLabel.textContent = isLoading ? 'Running' : 'Run';
+}
+
+function setAnalysisProgress(percent, title, text, state) {
+  analysisStatus.dataset.state = state;
+  analysisStatusTitle.textContent = title;
+  analysisStatusText.textContent = text;
+  analysisPercent.textContent = percent + '%';
+  analysisProgress.style.width = percent + '%';
+  analysisProgress.parentElement.setAttribute('aria-valuenow', String(percent));
+}
+
+function resetAnalysisState(message) {
+  clearAnalysisTimers();
+  setRunLoading(false);
+  stages.forEach((stage, index) => {
+    stage.textContent = index === 0 ? 'ready' : 'queued';
+    stage.classList.toggle('warn', index > 0);
+    stage.classList.remove('running');
+  });
+  setAnalysisProgress(0, 'Ready', message || 'Target is ready for analysis.', 'idle');
+}
+
+async function runAnalysis() {
+  if (analysisInProgress) return;
+  if (!serviceAvailable) {
+    showToast('Start the iRE-Zero workbench service to run real analysis');
+    return;
+  }
+  if (!pendingIpaFiles.length) {
+    showToast('Select an IPA or load the real sample before running');
+    return;
+  }
+  const form = new FormData();
+  pendingIpaFiles.forEach((file) => form.append('ipa', file, file.name));
+  if (pendingTraceFile && pendingIpaFiles.length === 1) form.append('trace', pendingTraceFile, pendingTraceFile.name);
+  await submitJob('/api/jobs', { method: 'POST', body: form });
+}
+
+async function submitJob(endpoint, options) {
+  setRunLoading(true);
+  setAnalysisProgress(4, 'Uploading', 'Sending IPA evidence to the local iRE-Zero analyzer.', 'running');
+  stages.forEach((stage) => {
+    stage.textContent = 'queued';
+    stage.classList.add('warn');
+    stage.classList.remove('running');
+  });
+  try {
+    const response = await fetch(endpoint, options);
+    const job = await response.json();
+    if (!response.ok) throw new Error(job.error || 'Analysis could not start');
+    monitorJob(job.id);
+  } catch (error) {
+    setRunLoading(false);
+    setAnalysisProgress(0, 'Failed', String(error.message || error), 'idle');
+    showToast('Analysis failed to start');
+  }
+}
+
+async function monitorJob(jobId) {
+  clearTimeout(jobPollTimer);
+  try {
+    const response = await fetch('/api/jobs/' + encodeURIComponent(jobId));
+    const job = await response.json();
+    if (!response.ok) throw new Error(job.error || 'Job status unavailable');
+    setAnalysisProgress(job.progress, job.phase, job.current_file || 'Running local analysis.', job.state === 'completed' ? 'complete' : 'running');
+    const activeStage = job.phase === 'Static analysis' ? 1 : job.phase === 'Writing reports' ? 4 : -1;
+    stages.forEach((stage, index) => {
+      stage.classList.remove('running');
+      if (job.state === 'completed' || (activeStage >= 0 && index < activeStage)) {
+        stage.textContent = index === 3 && !pendingTraceFile ? 'not captured' : 'done';
+        stage.classList.remove('warn');
+      } else if (index === activeStage) {
+        stage.textContent = 'running';
+        stage.classList.add('running');
+      }
+    });
+    if (job.state === 'completed') {
+      setRunLoading(false);
+      if (job.reports.length) {
+        const latest = job.reports[0];
+        activeReportId = latest.id;
+        applyReport(latest.report, latest.id);
+      }
+      await loadReportCatalog();
+      if (job.batch) await loadRecentBatch();
+      pendingTraceFile = null;
+      traceInput.value = '';
+      showToast(job.report_count + ' report' + (job.report_count === 1 ? '' : 's') + ' generated');
+      return;
+    }
+    if (job.state === 'failed') throw new Error(job.error || 'Analysis failed');
+    jobPollTimer = setTimeout(() => monitorJob(jobId), 400);
+  } catch (error) {
+    setRunLoading(false);
+    setAnalysisProgress(0, 'Failed', String(error.message || error), 'idle');
+    showToast('Analysis failed');
+  }
+}
+
+function updateTargetView(profile) {
+  document.querySelector('.target h1').textContent = profile.name;
+  activeTargetLabel.textContent = profile.name;
+  document.querySelector('.target-meta').innerHTML = profile.meta.map((item) => '<span>' + item + '</span>').join('');
+  document.querySelector('.file-text strong').textContent = profile.name;
+  document.querySelector('.file-text span').textContent = profile.fileMeta;
+  document.querySelector('.ring-value strong').textContent = String(profile.score);
+  document.querySelector('.ring-value span').textContent = profile.scoreLabel;
+  const ring = document.querySelector('.ring');
+  const color = profile.score >= 80 ? 'var(--red)' : profile.score >= 45 ? 'var(--amber)' : 'var(--green)';
+  ring.style.background = 'conic-gradient(' + color + ' 0 ' + (profile.score * 3.6) + 'deg, #26303a ' + (profile.score * 3.6) + 'deg 360deg)';
+}
+
+function dynamicIsCaptured(dynamic) {
+  return Boolean(dynamic && (dynamic.events || []).length && String(dynamic.status || '').startsWith('captured'));
+}
+
+function dynamicStatusText(dynamic) {
+  return String((dynamic && dynamic.status) || 'not_captured').replaceAll('_', ' ');
+}
+
+function applyReport(report, reportId) {
+  const filename = String(report.ipa_path || report.app_name || 'analyzed.ipa').split('/').pop();
+  const dynamic = report.dynamic || { status: 'not_captured', events: [], limitations: [] };
+  const signing = report.signing || {};
+  activeReportId = reportId || '';
+  activeReportPayload = report;
+  runtimePreflight = null;
+  runtimeTargets = null;
+  renderRuntimeTargets();
+  if (reportId && Array.from(reportSelector.options).some((option) => option.value === reportId)) {
+    reportSelector.value = reportId;
+  }
+  const profile = {
+    name: filename,
+    meta: [report.info_plist.bundle_identifier || 'unknown bundle', signing.Format || 'Mach-O', dynamicStatusText(dynamic), 'report ' + (reportId || 'loaded')],
+    fileMeta: report.executable_path + ' · analyzed',
+    score: report.score || 0,
+    scoreLabel: report.score >= 70 ? 'high' : report.score >= 35 ? 'elevated' : 'low',
+    queueStatus: 'report ready',
+    dotColor: report.score >= 70 ? 'amber' : 'green',
+    reportId: reportId,
+    report: report
+  };
+  targetProfiles[filename] = profile;
+  addQueueRow(filename, profile.queueStatus, profile.dotColor, true);
+  updateTargetView(profile);
+  document.getElementById('signatureValue').textContent = signing.TeamIdentifier ? 'Team ID: ' + signing.TeamIdentifier : 'Signing metadata extracted';
+  const entitlementKeys = Object.keys(report.entitlements || {});
+  document.getElementById('entitlementsValue').textContent = entitlementKeys.length + ' entitlement' + (entitlementKeys.length === 1 ? '' : 's') + ' extracted';
+  document.getElementById('symbolsValue').textContent = (report.binary.symbols || []).length + ' symbols · ' + (report.binary.sections || []).length + ' sections';
+  renderReportFindings(report.findings || []);
+  renderIssueRows(report);
+  renderNotes(report.ai_notes || []);
+  renderAnalystNotes(report.analyst_notes || []);
+  resetAnalystComposer();
+  loadStaticEvidenceFromReport(report);
+  loadDynamicEvidenceFromReport(dynamic, report);
+  refreshRuntimeAvailability();
+  const hasDynamicCapture = dynamicIsCaptured(dynamic);
+  stages.forEach((stage, index) => {
+    stage.classList.remove('running', 'warn');
+    stage.textContent = ['done', 'done', 'generated', hasDynamicCapture ? dynamicStatusText(dynamic) : 'not captured', 'done'][index];
+    if (index === 3 && !hasDynamicCapture) stage.classList.add('warn');
+  });
+  setAnalysisProgress(100, 'Completed', 'Loaded evidence-backed report for ' + filename + '.', 'complete');
+}
+
+function renderReportFindings(findings) {
+  const high = findings.filter((finding) => finding.severity === 'high' || finding.severity === 'critical').length;
+  document.getElementById('findingsSummary').textContent = findings.length + ' open · ' + high + ' high';
+  const list = document.getElementById('findingList');
+  if (!findings.length) {
+    list.innerHTML = '<div class="finding"><i class="severity low"></i><div><strong>No heuristic findings</strong><span>No flagged evidence in this analysis.</span></div><span class="tag">INFO</span></div>';
+    return;
+  }
+  list.innerHTML = findings.slice(0, 8).map((finding) =>
+    '<div class="finding"><i class="severity ' + (finding.severity === 'critical' ? 'high' : escapeHtml(finding.severity)) + '"></i>' +
+    '<div><strong>' + escapeHtml(finding.title) + '</strong><span>' + escapeHtml((finding.evidence || [finding.description])[0] || finding.description) + '</span></div>' +
+    '<span class="tag">' + escapeHtml(finding.category) + '</span></div>'
+  ).join('');
+}
+
+function renderIssueRows(report) {
+  const breakdown = report.score_breakdown || {};
+  const rankedBuckets = Object.keys(breakdown)
+    .filter((key) => breakdown[key] > 0)
+    .sort((a, b) => breakdown[b] - breakdown[a]);
+  document.getElementById('issueRows').innerHTML = rankedBuckets.map((key) => {
+      const linked = issueFindingForBucket(report.findings || [], key);
+      const evidence = linked && linked.evidence && linked.evidence[0] ? linked.evidence[0] : 'Scored evidence';
+      const layer = key === 'dynamic_confirmation' ? 'Dynamic' : 'Static';
+      return '<tr><td><strong>' + escapeHtml(issueBucketLabel(key)) + '</strong></td><td>' + layer + '</td><td>' + escapeHtml(evidence) + '</td><td><span class="pill ' + (breakdown[key] >= 20 ? 'red' : 'amber') + '">+' + breakdown[key] + '</span></td><td>observed</td></tr>';
+    }).join('') || '<tr><td colspan="5">No scored findings.</td></tr>';
+  document.getElementById('scoreRows').innerHTML = rankedBuckets.slice(0, 4).map((key) =>
+    '<div class="score-row"><span>' + escapeHtml(issueBucketLabel(key)) + '</span><b>' + breakdown[key] + '</b></div>'
+  ).join('') || '<div class="score-row"><span>No scored findings</span><b>0</b></div>';
+  const colors = ['var(--red)', 'var(--amber)', 'var(--blue)', 'var(--green)', 'var(--violet)'];
+  document.getElementById('scoreContributorRows').innerHTML = rankedBuckets.map((key, index) =>
+    '<div class="explain-row"><span>' + escapeHtml(issueBucketLabel(key)) + '</span><div class="bar"><i style="width:' +
+    Math.max(4, Math.round(breakdown[key] / 35 * 100)) + '%; background:' + colors[index % colors.length] +
+    ';"></i></div><b>+' + breakdown[key] + '</b></div>'
+  ).join('') || '<div class="explain-row"><span>No scored findings</span><div class="bar"><i style="width:0%;"></i></div><b>0</b></div>';
+}
+
+function issueFindingForBucket(findings, key) {
+  const categories = {
+    transport_security: ['transport-security'],
+    hardcoded_secrets: ['secrets'],
+    private_api: ['private-api'],
+    jailbreak_detection: ['anti-analysis'],
+    network_endpoints: ['network'],
+    entitlements: ['entitlements'],
+    symbol_intelligence: ['crypto', 'sensitive-storage', 'third-party-sdk'],
+    dynamic_confirmation: ['dynamic-network', 'dynamic-keychain', 'dynamic-private-api', 'dynamic-privacy', 'dynamic-tamper']
+  };
+  const allowed = categories[key] || [];
+  return findings.find((finding) =>
+    allowed.includes(finding.category) &&
+    (key !== 'dynamic_confirmation' || !String(finding.id).startsWith('dynamic.observation.'))
+  );
+}
+
+function issueBucketLabel(key) {
+  return {
+    transport_security: 'Transport security',
+    hardcoded_secrets: 'Hardcoded secrets',
+    private_api: 'Private API',
+    jailbreak_detection: 'Jailbreak detection',
+    network_endpoints: 'Network endpoints',
+    entitlements: 'Entitlements',
+    symbol_intelligence: 'Symbol intelligence',
+    dynamic_confirmation: 'Dynamic confirmation'
+  }[key] || key.replaceAll('_', ' ');
+}
+
+function renderNotes(notes) {
+  document.getElementById('notesSource').textContent = notes.length ? notes[0].source : 'not generated';
+  const list = document.getElementById('aiNotesList');
+  list.innerHTML = notes.length ? notes.map((note) =>
+    '<div class="finding"><i class="severity ' + (note.confidence === 'high' ? 'high' : 'medium') + '"></i>' +
+    '<div><strong>' + escapeHtml(note.title) + '</strong><span>' + escapeHtml(note.summary) + '</span></div>' +
+    '<span class="tag">' + escapeHtml(note.confidence) + '</span></div>'
+  ).join('') : '<div class="finding"><div><strong>No notes available</strong><span>Run analysis to generate evidence synthesis.</span></div></div>';
+}
+
+function resetAnalystComposer() {
+  linkedAnalystEvidence = [];
+  analystNoteTitle.value = '';
+  analystNoteBody.value = '';
+  analystNoteSeverity.value = 'medium';
+  analystNoteStatus.value = 'open';
+  renderLinkedEvidence();
+}
+
+function renderLinkedEvidence() {
+  document.getElementById('linkedEvidenceLabel').textContent = linkedAnalystEvidence.length
+    ? linkedAnalystEvidence.join(' | ')
+    : 'No evidence linked';
+}
+
+function linkEvidence(value) {
+  if (!value) return;
+  if (!linkedAnalystEvidence.includes(value)) linkedAnalystEvidence.push(value);
+  renderLinkedEvidence();
+}
+
+function linkSelectedStaticEvidence() {
+  const item = analysisDataset.find((candidate) => candidate.id === selectedAnalysisItemId);
+  if (!item) {
+    showToast('No static item selected');
+    return;
+  }
+  linkEvidence(item.kind + ': ' + item.name + (item.address ? ' @ ' + item.address : ''));
+  showToast('Static evidence linked');
+}
+
+function linkSelectedRuntimeEvidence() {
+  const event = runtimeEvents.find((candidate) => candidate.id === selectedRuntimeEventId);
+  if (!event) {
+    showToast('No runtime item selected');
+    return;
+  }
+  const source = runtimeViewMode === 'planned' ? 'Planned probe' : 'Runtime event';
+  linkEvidence(source + ': ' + event.operation + ' / ' + event.value);
+  showToast(source + ' linked');
+}
+
+function renderAnalystNotes(notes) {
+  document.getElementById('analystNotesState').textContent = notes.length + ' saved';
+  exportAnalystNotesButton.disabled = !activeReportId || !notes.length;
+  const list = document.getElementById('analystNoteList');
+  if (!notes.length) {
+    list.innerHTML = '<div class="analyst-note"><p>No analyst annotations saved for this report.</p></div>';
+    return;
+  }
+  list.innerHTML = notes.map((note) =>
+    '<article class="analyst-note">' +
+    '<header><strong>' + escapeHtml(note.title) + '</strong><span class="pill ' +
+    (note.severity === 'critical' || note.severity === 'high' ? 'red' : note.severity === 'medium' ? 'amber' : 'blue') +
+    '">' + escapeHtml(note.severity) + '</span></header>' +
+    '<div class="note-meta"><span class="tag">' + escapeHtml(note.status) + '</span><span class="tag">' + escapeHtml(note.created_at || '') + '</span></div>' +
+    '<p>' + escapeHtml(note.body) + '</p>' +
+    ((note.evidence || []).length ? '<p>' + escapeHtml(note.evidence.join(' | ')) + '</p>' : '') +
+    '<button type="button" data-delete-note="' + escapeHtml(note.id) + '">Delete</button>' +
+    '</article>'
+  ).join('');
+  list.querySelectorAll('[data-delete-note]').forEach((button) => {
+    button.addEventListener('click', () => deleteAnalystNote(button.dataset.deleteNote));
+  });
+}
+
+async function saveAnalystNote() {
+  if (!activeReportId) {
+    showToast('Load or analyze a report before saving notes');
+    return;
+  }
+  const body = analystNoteBody.value.trim();
+  const title = analystNoteTitle.value.trim();
+  if (!title || !body) {
+    showToast('Title and note text are required');
+    return;
+  }
+  try {
+    const response = await fetch('/api/reports/' + encodeURIComponent(activeReportId) + '/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        body,
+        severity: analystNoteSeverity.value,
+        status: analystNoteStatus.value,
+        evidence: linkedAnalystEvidence
+      })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Note could not be saved');
+    renderAnalystNotes(payload.notes || []);
+    resetAnalystComposer();
+    await loadReportCatalog();
+    showToast('Analyst note saved');
+  } catch (error) {
+    showToast(String(error.message || error));
+  }
+}
+
+async function deleteAnalystNote(noteId) {
+  if (!activeReportId || !noteId) return;
+  const response = await fetch('/api/reports/' + encodeURIComponent(activeReportId) + '/notes/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ note_id: noteId })
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    showToast(payload.error || 'Note could not be deleted');
+    return;
+  }
+  renderAnalystNotes(payload.notes || []);
+  showToast('Analyst note deleted');
+}
+
+function renderBatchResults(batch) {
+  if (!batch || !(batch.reports || []).length) return;
+  latestBatchIndexUrl = batch.index_url || '';
+  document.getElementById('batchPanel').hidden = false;
+  document.getElementById('batchMeta').textContent =
+    String(batch.file_count || batch.reports.length) + ' applications · run ' + String(batch.id || '');
+  document.getElementById('batchRows').innerHTML = batch.reports.map((report) =>
+    '<tr><td><strong>' + escapeHtml(report.app_name || report.id) + '</strong></td>' +
+    '<td>' + escapeHtml(report.bundle_identifier || 'unknown') + '</td>' +
+    '<td><span class="pill ' + (report.score >= 70 ? 'red' : report.score >= 35 ? 'amber' : 'green') + '">' + String(report.score || 0) + '</span></td>' +
+    '<td>' + String(report.findings || 0) + '</td>' +
+    '<td>' + escapeHtml(String(report.dynamic_status || 'not_captured').replaceAll('_', ' ')) + '</td>' +
+    '<td><button type="button" data-batch-report="' + escapeHtml(report.id) + '">Open</button></td></tr>'
+  ).join('');
+  document.querySelectorAll('[data-batch-report]').forEach((button) => {
+    button.addEventListener('click', () => loadSavedReport(button.dataset.batchReport));
+  });
+}
+
+async function loadRecentBatch() {
+  if (!serviceAvailable) return;
+  const response = await fetch('/api/batches', { cache: 'no-store' });
+  if (!response.ok) return;
+  const payload = await response.json();
+  if ((payload.batches || [])[0]) renderBatchResults(payload.batches[0]);
+}
+
+function loadStaticEvidenceFromReport(report) {
+  const binary = report.binary || {};
+  const indicators = report.strings || {};
+  const evidenceItems = (binary.evidence || []).filter((item) => item.kind === 'Finding' || item.kind === 'Disassembly');
+  const summaries = evidenceItems.map((item, index) => ({
+    id: item.id || 'evidence-' + index,
+    kind: item.kind || 'Evidence',
+    filterGroup: 'evidence',
+    name: item.title || 'Recovered item',
+    address: item.address || item.source || 'extracted',
+    segment: item.source || 'binary',
+    section: item.section || 'evidence',
+    offset: 'report',
+    size: (item.evidence || []).length + ' values',
+    confidence: item.severity === 'high' ? 'high' : 'observed',
+    risk: item.severity || 'info',
+    tags: [item.kind || '', item.source || '', ...(item.evidence || [])],
+    summary: item.summary || '',
+    xrefs: item.evidence || [],
+    mapClass: evidenceMapClass(item),
+    disasm: (item.instructions || []).length
+      ? item.instructions.map((line) => [line.address, line.operation, line.operand, line.comment || '', false])
+      : (item.evidence || [item.summary || 'observed']).map((value) => [item.address || item.source || 'evidence', 'OBS', String(value), item.source || '', false])
+  }));
+  const sections = (binary.sections || []).map((section, index) => ({
+    id: 'section-view-' + index,
+    kind: 'Section',
+    filterGroup: 'section',
+    name: section.segment + '.' + section.name,
+    address: section.address || 'n/a',
+    segment: section.segment || 'Mach-O',
+    section: section.name || 'section',
+    offset: '0x' + Number(section.offset || 0).toString(16),
+    size: String(section.size || 0) + ' bytes',
+    confidence: 'load command',
+    risk: Number(section.entropy || 0) > 7.4 ? 'medium' : 'info',
+    tags: ['Mach-O', section.segment || '', section.name || '', section.flags || '', 'entropy ' + String(section.entropy || 0)],
+    summary: 'Mach-O section recovered from the load command table; entropy ' + String(section.entropy || 0) + '.',
+    xrefs: ['flags=' + String(section.flags || 'n/a'), 'entropy=' + String(section.entropy || 0), 'file offset=0x' + Number(section.offset || 0).toString(16)],
+    mapClass: evidenceMapClass({ title: section.name, kind: 'section', severity: Number(section.entropy || 0) > 7.4 ? 'medium' : 'info' }),
+    disasm: section.name === '__text' && (binary.disassembly || []).length
+      ? binary.disassembly.slice(0, 120).map((line) => [line.address, line.operation, line.operand, line.comment || '', false])
+      : [[section.address || 'n/a', 'SECTION', section.segment + '.' + section.name, String(section.flags || '') + ' entropy=' + String(section.entropy || 0), false]]
+  }));
+  const libraryValues = [...new Set([...(binary.linked_libraries || []), ...(binary.embedded_frameworks || []), ...(binary.embedded_dylibs || [])])];
+  const imports = libraryValues.map((library, index) => ({
+    id: 'import-view-' + index,
+    kind: 'Import',
+    filterGroup: 'import',
+    name: library,
+    address: 'LC_LOAD_DYLIB',
+    segment: '__LINKEDIT',
+    section: 'imports',
+    offset: 'load command',
+    size: 'path reference',
+    confidence: 'otool -L',
+    risk: 'info',
+    tags: ['import', 'framework', 'dylib', library],
+    summary: 'Linked or embedded library recovered from Mach-O and bundle metadata.',
+    xrefs: ['otool -L / bundle enumeration', library],
+    mapClass: 'imports',
+    disasm: [['LC_LOAD_DYLIB', 'LOAD', library, 'linked library reference', false]]
+  }));
+  const categoryEntries = Object.entries(binary.symbol_categories || {});
+  const symbolValues = [...new Set([...(binary.symbols || []), ...(binary.class_dump || [])])];
+  const symbols = symbolValues.map((symbol, index) => {
+    const category = (categoryEntries.find((entry) => (entry[1] || []).includes(symbol)) || ['symbol'])[0];
+    const risk = category === 'private_api' ? 'high' : category === 'jailbreak_instrumentation' ? 'medium' : 'info';
+    return {
+      id: 'symbol-view-' + index,
+      kind: 'Symbol',
+      filterGroup: 'symbol',
+      name: symbol,
+      address: 'symbol table',
+      segment: 'nm / Ghidra',
+      section: category.replaceAll('_', ' '),
+      offset: 'n/a',
+      size: 'identifier',
+      confidence: 'recovered',
+      risk: risk,
+      tags: ['symbol', category, symbol],
+      summary: 'Recovered symbol classified as ' + category.replaceAll('_', ' ') + '.',
+      xrefs: ['category: ' + category.replaceAll('_', ' '), 'source: nm / Ghidra export'],
+      mapClass: evidenceMapClass({ title: category, severity: risk }),
+      disasm: [['symbol', 'NAME', symbol, 'category: ' + category.replaceAll('_', ' '), false]]
+    };
+  });
+  const stringRecords = [
+    ...(indicators.urls || []).map((value) => ({ kind: 'URL String', value: value, risk: value.toLowerCase().startsWith('http://') && !value.toLowerCase().includes('apple.com') ? 'medium' : 'info' })),
+    ...(indicators.ips || []).map((value) => ({ kind: 'IP String', value: value, risk: 'medium' })),
+    ...(indicators.secrets || []).map((value) => ({ kind: 'Secret Candidate', value: value, risk: 'high' })),
+    ...Object.entries(indicators.suspicious_keywords || {}).flatMap(([marker, values]) =>
+      (values || []).map((value) => ({ kind: 'Keyword String', value: value, marker: marker, risk: 'medium' }))
+    )
+  ];
+  const strings = stringRecords.map((record, index) => ({
+    id: 'string-view-' + index,
+    kind: record.kind,
+    filterGroup: 'string',
+    name: record.value,
+    address: 'strings',
+    segment: '__TEXT',
+    section: '__cstring',
+    offset: 'extracted',
+    size: String(record.value.length) + ' chars',
+    confidence: 'recovered',
+    risk: record.risk,
+    tags: ['string', record.marker || '', record.value],
+    summary: 'Extracted executable string' + (record.marker ? ' matching ' + record.marker + '.' : '.'),
+    xrefs: [record.marker ? 'rule: ' + record.marker : 'strings extraction', record.value],
+    mapClass: evidenceMapClass({ title: record.kind, severity: record.risk }),
+    disasm: [['__cstring', 'DB', record.value, record.marker || 'recovered string', record.risk === 'high']]
+  }));
+  const runtimeLinks = ((report.dynamic || {}).events || []).filter((event) => (event.static_evidence || []).length).map((event, index) => ({
+    id: 'runtime-link-' + index,
+    kind: 'Runtime Xref',
+    filterGroup: 'runtime-link',
+    name: event.operation + (event.value ? ' / ' + event.value : ''),
+    address: event.timestamp || 'runtime',
+    segment: 'Dynamic Capture',
+    section: event.layer || 'event',
+    offset: 'observed',
+    size: String((event.static_evidence || []).length) + ' correlations',
+    confidence: 'observed + correlated',
+    risk: event.severity || 'info',
+    tags: ['runtime', event.layer || '', event.operation || '', event.value || '', ...(event.static_evidence || [])],
+    summary: 'Observed runtime event correlated to recovered IPA artifacts.',
+    xrefs: event.static_evidence || [],
+    mapClass: event.layer === 'network' ? 'imports' : 'text',
+    disasm: (event.static_evidence || []).map((value) => [event.timestamp || 'runtime', 'XREF', value, event.operation || '', false])
+  }));
+  analysisDataset = [...summaries, ...sections, ...imports, ...symbols, ...strings, ...runtimeLinks];
+  if (!analysisDataset.length) {
+    analysisDataset = [{
+      id: 'no-static-evidence', kind: 'Status', filterGroup: 'evidence', name: 'No structured evidence recovered', address: 'n/a',
+      segment: 'analysis', section: 'status', offset: 'n/a', size: '0', confidence: 'low', risk: 'info',
+      tags: [], summary: 'Native analysis tools returned no structured evidence.', xrefs: [], mapClass: 'text', disasm: []
+    }];
+  }
+  sectionCells = (report.binary.sections || []).map((section) => evidenceMapClass({ title: section.name, kind: 'section', severity: section.entropy > 7.4 ? 'medium' : 'info' }));
+  if (!sectionCells.length) sectionCells = ['text'];
+  searchInput.value = '';
+  staticFilter = 'all';
+  renderStaticFilters();
+  selectAnalysisItem(analysisDataset[0].id);
+}
+
+function evidenceMapClass(item) {
+  const text = String(item.title || item.name || '').toLowerCase();
+  if (item.severity === 'high' || item.severity === 'critical') return 'risk';
+  if (text.includes('private')) return 'private';
+  if (text.includes('cstring') || text.includes('url') || text.includes('string')) return 'cstring';
+  if (text.includes('import') || text.includes('linkedit')) return 'imports';
+  return 'text';
+}
+
+function loadDynamicEvidenceFromReport(dynamic, report) {
+  const isCaptured = dynamicIsCaptured(dynamic);
+  const statusText = dynamicStatusText(dynamic);
+  const probes = isCaptured ? [] : ((dynamic.probes || []).length ? dynamic.probes : buildRuntimeProbeFallback(report));
+  runtimeViewMode = isCaptured ? 'captured' : probes.length ? 'planned' : 'unavailable';
+  const items = isCaptured ? (dynamic.events || []) : probes;
+  runtimeEvents = items.map((item, index) => isCaptured ? ({
+    id: item.id || 'runtime-' + index,
+    time: item.timestamp || 'event-' + index,
+    position: 8 + (index * 84 / Math.max(1, items.length - 1)),
+    layer: item.layer || 'process',
+    severity: item.severity || 'info',
+    title: item.operation || 'Observed runtime event',
+    operation: item.operation || 'event',
+    value: item.value || '',
+    verdict: runtimeCorrelationVerdict(item, report),
+    summary: 'Source: ' + (item.source || dynamic.evidence_source || dynamic.source || 'authorized runtime capture'),
+    stack: item.stack || [],
+    correlation: [
+      'Source: ' + (item.source || dynamic.evidence_source || dynamic.source || 'authorized runtime capture'),
+      ...(item.static_evidence || [])
+    ]
+  }) : ({
+    id: item.id || 'probe-' + index,
+    time: 'P' + String(index + 1).padStart(2, '0'),
+    position: 8 + (index * 84 / Math.max(1, items.length - 1)),
+    layer: item.layer || 'process',
+    severity: item.priority || 'info',
+    title: 'Probe ' + (item.operation || 'runtime signal'),
+    operation: item.operation || 'instrument',
+    value: item.target || '',
+    verdict: 'planned',
+    summary: item.rationale || 'Candidate generated from static IPA evidence; not observed in execution.',
+    stack: item.capture_method ? [item.capture_method] : [],
+    correlation: item.evidence || []
+  }));
+  runtimeCampaigns = buildRuntimeCampaignCoverage(dynamic, report, isCaptured, probes);
+  selectedRuntimeCampaignId = 'all';
+  runtimeFilter = 'all';
+  const highEvents = runtimeEvents.filter((event) => event.severity === 'high' || event.severity === 'critical').length;
+  document.querySelectorAll('[data-runtime-filter]').forEach((button) => button.classList.toggle('active', button.dataset.runtimeFilter === 'all'));
+  setRuntimeModeLabels(isCaptured);
+  document.getElementById('runtimePanelSubtitle').textContent = isCaptured ? statusText : runtimeEvents.length + ' probes planned · execution not captured';
+  document.getElementById('runtimeSource').textContent = isCaptured ? (dynamic.evidence_source || dynamic.source || 'authorized capture') : 'static evidence';
+  document.getElementById('runtimeCaptureState').textContent = isCaptured ? statusText : 'not captured';
+  document.getElementById('runtimeSessionValue').textContent = isCaptured ? (dynamic.session || 'capture') : 'awaiting trace';
+  document.getElementById('runtimeState').textContent = isCaptured ? statusText : 'plan only';
+  document.getElementById('runtimeFlowValue').textContent = String(runtimeEvents.length);
+  document.getElementById('runtimeHookValue').textContent = String(highEvents);
+  document.getElementById('runtimeEventTotal').textContent = String(runtimeEvents.length);
+  document.getElementById('runtimeHighTotal').textContent = String(highEvents);
+  document.getElementById('runtimeValue').textContent = isCaptured
+    ? runtimeEvents.length + ' captured events'
+    : runtimeEvents.length + ' planned probes · no trace';
+  document.getElementById('runtimeOverview').innerHTML = runtimeEvents.length
+    ? ['network', 'keychain', 'process', 'file'].map((layer) => {
+        const count = runtimeEvents.filter((item) => item.layer === layer).length;
+        if (!count) return '';
+        return '<div class="traffic-row"><span>' + layer + '</span><div class="traffic-line"><i style="width:' + Math.max(18, Math.round(count / runtimeEvents.length * 100)) + '%"></i></div><b>' + count + '</b></div>';
+      }).join('')
+    : '<div class="traffic-row"><span>status</span><div class="traffic-line"><i style="width:0%"></i></div><b>none</b></div>';
+  renderRuntimeCampaigns();
+  if (runtimeEvents.length) {
+    selectRuntimeEvent(runtimeEvents[0].id);
+  } else {
+    renderUnavailableDynamic(dynamic);
+  }
+}
+
+function runtimeCorrelationVerdict(item, report) {
+  if (item.correlation_status) return item.correlation_status;
+  if ((item.layer || '').toLowerCase() !== 'network' && !String(item.operation || '').toLowerCase().includes('urlsession')) {
+    return item.verdict || 'OBSERVED';
+  }
+  const observed = String(item.value || '').replace(/\/$/, '');
+  const urls = (((report || {}).strings || {}).urls || []);
+  const confirmed = urls.some((url) => String(url).replace(/\/$/, '') === observed);
+  if (confirmed) return 'CONFIRMED';
+  try {
+    const host = new URL(observed).hostname.split('.').slice(-2).join('.');
+    const domainMatch = urls.some((url) => new URL(String(url)).hostname.split('.').slice(-2).join('.') === host);
+    return domainMatch ? 'DOMAIN_MATCH' : 'DYNAMIC_ONLY';
+  } catch (error) {
+    return 'DYNAMIC_ONLY';
+  }
+}
+
+function buildRuntimeCampaignCoverage(dynamic, report, isCaptured, probes) {
+  const reportDynamic = report.dynamic || {};
+  const suppliedCoverage = dynamic.campaign_coverage && dynamic.campaign_coverage.campaigns;
+  if (suppliedCoverage && suppliedCoverage.length && dynamic.session === reportDynamic.session) {
+    return suppliedCoverage;
+  }
+  const definitions = (dynamic.campaigns || []).length
+    ? dynamic.campaigns
+    : (reportDynamic.campaigns || []).length
+      ? reportDynamic.campaigns
+      : buildRuntimeCampaignFallback(isCaptured ? (reportDynamic.probes || []) : probes);
+  return definitions.map((campaign) => {
+    const matches = isCaptured ? runtimeEvents.filter((event) => runtimeEventMatchesCampaign(campaign.id, event)) : [];
+    return Object.assign({}, campaign, {
+      status: matches.length ? 'observed' : (isCaptured ? 'not observed' : 'planned'),
+      event_count: matches.length,
+      event_ids: matches.map((event) => event.id)
+    });
+  });
+}
+
+function buildRuntimeCampaignFallback(probes) {
+  const campaigns = [{
+    id: 'campaign-startup',
+    title: 'Launch Baseline',
+    objective: 'Observe startup behavior.',
+    workflow: ['Start capture and load the first screen.'],
+    probe_ids: []
+  }];
+  const definitions = [
+    ['campaign-network', 'Network & TLS', 'Observe destinations and trust surfaces.', (probe) => probe.layer === 'network'],
+    ['campaign-storage', 'Secrets & Storage', 'Observe redacted keychain and storage operations.', (probe) => probe.layer === 'keychain' || probe.layer === 'file'],
+    ['campaign-privacy', 'Privacy Access', 'Observe pasteboard and application discovery checks.', (probe) => /pasteboard|canopenurl/i.test(probe.operation || '')],
+    ['campaign-tamper', 'Tamper Response', 'Observe jailbreak and instrumentation checks.', (probe) => /fileexists|dlopen|sysctl|private api/i.test(probe.operation || '')],
+    ['campaign-crypto', 'Cryptographic Use', 'Observe cryptographic API use without material.', (probe) => /cryptographic/i.test(probe.operation || '')]
+  ];
+  definitions.forEach(([id, title, objective, selector]) => {
+    const ids = probes.filter(selector).map((probe) => probe.id);
+    if (ids.length) campaigns.push({ id, title, objective, workflow: [], probe_ids: ids });
+  });
+  return campaigns;
+}
+
+function runtimeEventMatchesCampaign(campaignId, event) {
+  const text = (event.layer + ' ' + event.operation + ' ' + event.value).toLowerCase();
+  if (campaignId === 'campaign-startup') return text.includes('instrumentation attached') || text.includes('launch');
+  if (campaignId === 'campaign-network') return event.layer === 'network' || text.includes('sectrustevaluate');
+  if (campaignId === 'campaign-storage') return event.layer === 'keychain' || event.layer === 'file' || text.includes('userdefaults');
+  if (campaignId === 'campaign-privacy') return text.includes('pasteboard') || text.includes('canopenurl');
+  if (campaignId === 'campaign-tamper') return ['fileexistsatpath', 'dlopen', 'sysctl', 'cydia', 'substrate', 'frida'].some((value) => text.includes(value));
+  if (campaignId === 'campaign-crypto') return ['cccrypt', 'seckey', 'cryptokit', 'cryptographic'].some((value) => text.includes(value));
+  return false;
+}
+
+function renderRuntimeCampaigns() {
+  const list = document.getElementById('campaignList');
+  const observed = runtimeCampaigns.filter((campaign) => campaign.status === 'observed').length;
+  document.getElementById('campaignCoverage').textContent = observed + '/' + runtimeCampaigns.length + ' observed';
+  if (!runtimeCampaigns.length) {
+    list.innerHTML = '<div class="correlation-item">No campaign targets derived from this report.</div>';
+    return;
+  }
+  list.innerHTML = runtimeCampaigns.map((campaign) =>
+    '<button class="campaign-card ' + (campaign.status === 'observed' ? 'observed ' : '') +
+    (selectedRuntimeCampaignId === campaign.id ? 'active' : '') + '" type="button" data-runtime-campaign="' + escapeHtml(campaign.id) + '">' +
+    '<strong>' + escapeHtml(campaign.title) + '</strong>' +
+    '<span>' + escapeHtml(campaign.objective) + '</span>' +
+    '<b>' + escapeHtml(String(campaign.status).replaceAll('_', ' ')) + ' · ' + String(campaign.event_count || 0) + ' events</b></button>'
+  ).join('');
+  list.querySelectorAll('[data-runtime-campaign]').forEach((button) => {
+    button.addEventListener('click', () => {
+      selectedRuntimeCampaignId = selectedRuntimeCampaignId === button.dataset.runtimeCampaign ? 'all' : button.dataset.runtimeCampaign;
+      renderRuntimeCampaigns();
+      const results = currentRuntimeResults();
+      renderRuntimeSummary(results);
+      renderRuntimeEvents(results);
+      renderRuntimeTimeline(results, results[0]);
+      renderRuntimeTraceRows(results, results[0]);
+      if (results[0]) selectRuntimeEvent(results[0].id);
+    });
+  });
+}
+
+function setRuntimeModeLabels(isCaptured) {
+  document.getElementById('runtimeListTitle').textContent = isCaptured ? 'Runtime Events' : 'Planned Probes';
+  document.getElementById('runtimeFlowLabel').textContent = isCaptured ? 'Events' : 'Probes';
+  document.getElementById('runtimeHookLabel').textContent = isCaptured ? 'High' : 'Priority';
+  document.getElementById('runtimeEventMetricLabel').textContent = isCaptured ? 'Events' : 'Probes';
+  document.getElementById('runtimeHighMetricLabel').textContent = isCaptured ? 'High' : 'Priority';
+  document.getElementById('runtimeTimelineTitle').textContent = isCaptured ? 'Behavior Timeline' : 'Probe Coverage';
+  document.getElementById('runtimeWindow').textContent = isCaptured ? 'captured trace' : 'not observed';
+  document.getElementById('runtimeInspectorTitle').textContent = isCaptured ? 'Runtime Inspector' : 'Probe Inspector';
+  document.getElementById('runtimeTableHead').innerHTML = isCaptured
+    ? '<tr><th>Time</th><th>Layer</th><th>Operation</th><th>Observed Value</th><th>Verdict</th></tr>'
+    : '<tr><th>Probe</th><th>Layer</th><th>Operation</th><th>Target</th><th>Status</th></tr>';
+}
+
+function buildRuntimeProbeFallback(report) {
+  const probes = [];
+  const add = (id, layer, operation, target, rationale, priority, evidence, captureMethod) => {
+    probes.push({ id, layer, operation, target, rationale, priority, evidence: evidence || [], capture_method: captureMethod || '' });
+  };
+  const atsDomains = ((report.info_plist || {}).app_transport_security || {}).NSExceptionDomains || {};
+  Object.entries(atsDomains).forEach(([domain, config]) => {
+    if (config && config.NSExceptionAllowsInsecureHTTPLoads === true) {
+      add('probe-ats-' + domain, 'network', 'URLSessionTask.resume', domain, 'Verify whether this ATS exception is used for cleartext traffic.', 'high', [domain], 'Capture URLSession requests and TLS metadata.');
+    }
+  });
+  const urls = ((report.strings || {}).urls || []).filter((url) => {
+    const normalized = String(url).toLowerCase();
+    return !['ocsp.', 'crl.', '/dtds/', '/appleca/'].some((part) => normalized.includes(part));
+  }).slice(0, 4);
+  urls.forEach((url, index) => add('probe-url-' + index, 'network', 'URLSessionTask.resume', url, 'Verify whether this recovered endpoint is reached and what data is transmitted.', url.startsWith('http://') ? 'medium' : 'low', [url], 'Capture endpoint, status, and call stack.'));
+  const categories = ((report.binary || {}).symbol_categories || {});
+  if ((categories.crypto || []).length) add('probe-crypto', 'process', 'CryptoKit / Security operations', 'key and payload flows', 'Correlate cryptographic calls with authentication and network workflows.', 'low', categories.crypto.slice(0, 4), 'Record API names and stacks without extracting key material.');
+  if (((report.info_plist || {}).query_schemes || []).length) add('probe-schemes', 'process', 'UIApplication.canOpenURL', report.info_plist.query_schemes.slice(0, 8).join(', '), 'Measure installed-app discovery during tested workflows.', 'medium', report.info_plist.query_schemes.slice(0, 8), 'Trace canOpenURL invocations.');
+  if ((report.findings || []).some((finding) => finding.id === 'symbols.analytics_tracking')) add('probe-telemetry', 'network', 'telemetry request dispatch', 'analytics or attribution traffic', 'Confirm whether recovered SDK indicators send data at runtime.', 'medium', [], 'Capture outgoing requests and triggering action.');
+  return probes;
+}
+
+function renderUnavailableDynamic(dynamic) {
+  document.getElementById('runtimeResultCount').textContent = '0';
+  document.getElementById('runtimeTitle').textContent = 'No runtime capture attached';
+  document.getElementById('runtimeMeta').textContent = 'import JSON / JSONL trace';
+  document.getElementById('runtimeEventList').innerHTML = '<div class="event-row"><span></span><div><strong>Dynamic evidence unavailable</strong><span>Import an authorized execution capture with the IPA.</span></div><i class="runtime-severity">idle</i></div>';
+  document.getElementById('runtimeSummary').innerHTML = '<div class="runtime-card"><span>Status</span><strong>none</strong><p>no observed events</p></div>';
+  document.getElementById('runtimeTimeline').innerHTML = '';
+  document.getElementById('runtimeTraceRows').innerHTML = '';
+  document.getElementById('runtimeSeverity').textContent = 'not captured';
+  document.getElementById('runtimeEventInfo').innerHTML = '<strong>Collection Required</strong><div class="kv"><span>State</span><code>' + escapeHtml(dynamic.status || 'not_captured') + '</code></div><div class="kv"><span>Next</span><code>Import a Corellium, SRD, or authorized hook capture.</code></div>';
+  document.getElementById('runtimeStack').innerHTML = '';
+  document.getElementById('runtimeCorrelation').innerHTML = (dynamic.limitations || []).map((item) => '<div class="correlation-item">' + escapeHtml(item) + '</div>').join('');
+}
+
+function setTarget(profile) {
+  targetProfiles[profile.name] = profile;
+  addQueueRow(profile.name, profile.queueStatus, profile.dotColor || (profile.score >= 80 ? 'amber' : 'blue'), true);
+  activateTarget(profile.name, true);
+}
+
+function activateTarget(name, silent) {
+  const profile = targetProfiles[name];
+  if (!profile) return;
+  document.querySelectorAll('.queue-row').forEach((row) => row.classList.toggle('active', row.dataset.targetName === name));
+  updateTargetView(profile);
+  updateTargetManagerButtons();
+  if (!analysisInProgress) resetAnalysisState(name + ' is ready for analysis.');
+  if (!silent) showToast(name + ' selected');
+}
+
+function clearTargetView() {
+  clearAnalysisTimers();
+  setRunLoading(false);
+  document.querySelector('.target h1').textContent = 'No target selected';
+  activeTargetLabel.textContent = 'No target selected';
+  document.querySelector('.target-meta').innerHTML = '<span>create or import a target</span><span>idle</span>';
+  document.querySelector('.file-text strong').textContent = 'No IPA selected';
+  document.querySelector('.file-text span').textContent = 'Use +, Select IPA, or Import Folder';
+  document.querySelector('.ring-value strong').textContent = '0';
+  document.querySelector('.ring-value span').textContent = 'idle';
+  document.querySelector('.ring').style.background = 'conic-gradient(var(--green) 0 0deg, #26303a 0deg 360deg)';
+  stages.forEach((stage) => {
+    stage.textContent = 'idle';
+    stage.classList.remove('warn');
+  });
+  setAnalysisProgress(0, 'Idle', 'Create or import a target to begin analysis.', 'idle');
+  updateTargetManagerButtons();
+}
+
+function addQueueRow(name, status, dotColor, makeActive) {
+  const existing = Array.from(document.querySelectorAll('.queue-row')).find((row) => row.querySelector('strong')?.textContent === name);
+  if (makeActive) document.querySelectorAll('.queue-row').forEach((row) => row.classList.remove('active'));
+  if (existing) {
+    existing.querySelector('span').textContent = status;
+    existing.dataset.targetName = name;
+    ensureQueueControls(existing);
+    if (makeActive) existing.classList.add('active');
+    return existing;
+  }
+  const row = document.createElement('div');
+  row.className = 'queue-row' + (makeActive ? ' active' : '');
+  row.dataset.targetName = name;
+  row.innerHTML = '<div><strong></strong><span></span></div><i class="dot ' + dotColor + '"></i>';
+  row.querySelector('strong').textContent = name;
+  row.querySelector('span').textContent = status;
+  ensureQueueControls(row);
+  document.querySelector('.queue').appendChild(row);
+  return row;
+}
+
+function queueRows() {
+  return Array.from(document.querySelectorAll('.queue-row'));
+}
+
+function activeQueueName() {
+  return document.querySelector('.queue-row.active')?.dataset.targetName || '';
+}
+
+function updateTargetManagerButtons() {
+  const rows = queueRows();
+  previousTargetButton.disabled = rows.length < 2;
+  nextTargetButton.disabled = rows.length < 2;
+  deleteTargetButton.disabled = rows.length === 0;
+  if (!analysisInProgress) runButton.disabled = rows.length === 0;
+}
+
+function ensureQueueControls(row) {
+  row.setAttribute('role', 'button');
+  row.setAttribute('tabindex', '0');
+  row.setAttribute('aria-label', 'Select ' + row.dataset.targetName);
+  if (!row.querySelector('.queue-delete')) {
+    const button = document.createElement('button');
+    button.className = 'queue-delete';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Delete ' + row.dataset.targetName);
+    button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    row.appendChild(button);
+  }
+  row.onclick = (event) => {
+    if (event.target.closest('.queue-delete')) return;
+    const profile = targetProfiles[row.dataset.targetName];
+    if (profile && profile.reportId && !profile.report) {
+      loadSavedReport(profile.reportId);
+    } else if (profile && profile.report) {
+      applyReport(profile.report, profile.reportId);
+    } else {
+      activateTarget(row.dataset.targetName);
+    }
+  };
+  row.onkeydown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      row.click();
+    }
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault();
+      deleteQueueTarget(row.dataset.targetName);
+    }
+  };
+  row.querySelector('.queue-delete').onclick = (event) => {
+    event.stopPropagation();
+    deleteQueueTarget(row.dataset.targetName);
+  };
+  updateTargetManagerButtons();
+}
+
+function deleteQueueTarget(name) {
+  const row = queueRows().find((item) => item.dataset.targetName === name);
+  if (!row) return;
+  const wasActive = row.classList.contains('active');
+  const rows = queueRows();
+  const index = rows.indexOf(row);
+  const nextRow = rows[index + 1] || rows[index - 1] || null;
+  row.remove();
+  delete targetProfiles[name];
+  updateTargetManagerButtons();
+  if (wasActive) {
+    if (nextRow && nextRow.dataset.targetName) {
+      activateTarget(nextRow.dataset.targetName, true);
+      showToast(name + ' removed; switched to ' + nextRow.dataset.targetName);
+    } else {
+      clearTargetView();
+      showToast(name + ' removed; queue is empty');
+    }
+  } else {
+    showToast(name + ' removed');
+  }
+}
+
+function navigateTarget(direction) {
+  const rows = queueRows();
+  if (rows.length < 2) {
+    showToast('No other targets in queue');
+    return;
+  }
+  const current = activeQueueName();
+  const currentIndex = Math.max(0, rows.findIndex((row) => row.dataset.targetName === current));
+  const nextIndex = (currentIndex + direction + rows.length) % rows.length;
+  activateTarget(rows[nextIndex].dataset.targetName);
+}
+
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return 'unknown size';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return (unit === 0 ? value : value.toFixed(1)) + ' ' + units[unit];
+}
+
+function updateFromFile(file) {
+  if (!file) return;
+  pendingIpaFiles = [file];
+  activeReportId = '';
+  activeReportPayload = null;
+  const name = file.name || 'selected.ipa';
+  setTarget({
+    name,
+    meta: ['local file', 'pending analysis', 'selected IPA', 'run #LOCAL'],
+    fileMeta: formatBytes(file.size) + ' · selected · pending',
+    score: 0,
+    scoreLabel: 'pending',
+    queueStatus: 'queued'
+  });
+  stages.forEach((stage, index) => {
+    stage.textContent = index === 0 ? 'ready' : 'queued';
+    stage.classList.toggle('warn', index > 0);
+  });
+  resetAnalysisState(name + ' is ready for analysis.');
+  showToast(name + ' selected');
+}
+
+function importFolder(files) {
+  const ipaFiles = Array.from(files || []).filter((file) => file.name.toLowerCase().endsWith('.ipa'));
+  if (!ipaFiles.length) {
+    showToast('No IPA files found in selected folder');
+    return;
+  }
+  ipaFiles.slice(0, 8).forEach((file, index) => addQueueRow(file.name, index === 0 ? 'ready' : 'queued', index === 0 ? 'blue' : 'amber', index === 0));
+  updateFromFile(ipaFiles[0]);
+  pendingIpaFiles = ipaFiles;
+  showToast(ipaFiles.length + ' IPA file' + (ipaFiles.length === 1 ? '' : 's') + ' imported');
+}
+
+function createNewTarget() {
+  newTargetCount += 1;
+  const index = newTargetCount;
+  const name = 'new-target-' + index + '.ipa';
+  setTarget({
+    name,
+    meta: ['new target', 'awaiting IPA', 'manual slot', 'run #NEW' + index],
+    fileMeta: 'No file selected · pending',
+    score: 0,
+    scoreLabel: 'pending',
+    queueStatus: 'awaiting file'
+  });
+  showToast('New target created');
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+function riskBadgeClass(item) {
+  if (item.risk === 'high' || item.mapClass === 'risk') return 'risk';
+  if (item.kind === 'Private API' || item.mapClass === 'private') return 'api';
+  if (item.tags.includes('endpoint') || item.tags.includes('URLSession')) return 'net';
+  if (item.tags.includes('crypto')) return 'crypto';
+  return '';
+}
+
+function analysisSearchText(item) {
+  return [
+    item.kind,
+    item.name,
+    item.address,
+    item.segment,
+    item.section,
+    item.summary,
+    item.risk,
+    ...item.tags,
+    ...item.xrefs,
+    ...item.disasm.flat()
+  ].join(' ').toLowerCase();
+}
+
+function showStaticEvidence(silent) {
+  tabs.forEach((tab) => {
+    const isStatic = tab.dataset.tab === 'static';
+    tab.classList.toggle('active', isStatic);
+    tab.setAttribute('aria-selected', isStatic ? 'true' : 'false');
+  });
+  document.querySelectorAll('.artifact').forEach((panel) => panel.classList.toggle('active', panel.id === 'static'));
+  if (!silent) showToast('Static analysis opened');
+}
+
+function renderSymbolList(items, query) {
+  const symbolList = document.getElementById('symbolList');
+  const resultCount = document.getElementById('analysisResultCount');
+  const searchMode = document.getElementById('analysisSearchMode');
+  const searchScope = document.getElementById('analysisSearchScope');
+  const visibleItems = items.slice(0, 250);
+  resultCount.textContent = String(items.length);
+  searchMode.textContent = query ? 'filtered results' : (staticFilter === 'all' ? 'artifact index' : staticFilter.replace('-', ' '));
+  searchScope.textContent = query ? '"' + query + '"' : (items.length > visibleItems.length ? visibleItems.length + ' shown' : 'real IPA data');
+  if (!items.length) {
+    symbolList.innerHTML = '<div class="symbol-row"><span></span><strong>No analysis items matched</strong><mark>0 hits</mark></div>';
+    return;
+  }
+  symbolList.innerHTML = visibleItems.map((item) => {
+    const active = item.id === selectedAnalysisItemId ? ' active' : '';
+    const badge = riskBadgeClass(item);
+    return '<button class="symbol-row' + active + '" type="button" data-analysis-id="' + escapeHtml(item.id) + '">' +
+      '<span class="badge-dot ' + badge + '">' + escapeHtml(item.kind.slice(0, 3).toUpperCase()) + '</span>' +
+      '<div><strong>' + escapeHtml(item.name) + '</strong><span>' + escapeHtml(item.address + ' · ' + item.section) + '</span></div>' +
+      '<mark>' + escapeHtml(item.risk) + '</mark>' +
+      '</button>';
+  }).join('');
+  symbolList.querySelectorAll('[data-analysis-id]').forEach((row) => {
+    row.addEventListener('click', () => selectAnalysisItem(row.dataset.analysisId));
+  });
+}
+
+function renderDisassembly(item) {
+  document.getElementById('disasmTitle').textContent = item.name;
+  document.getElementById('disasmMeta').textContent = item.kind + ' · ' + item.segment + '.' + item.section;
+  document.getElementById('disasmBody').innerHTML = item.disasm.map((line) => {
+    const active = line[4] ? ' active' : '';
+    return '<div class="asm-line' + active + '">' +
+      '<span class="addr">' + escapeHtml(line[0]) + '</span>' +
+      '<span class="op">' + escapeHtml(line[1]) + '</span>' +
+      '<span class="arg">' + escapeHtml(line[2]) + '</span>' +
+      '<span class="comment">' + escapeHtml(line[3]) + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+function renderInspector(item) {
+  const reportBinary = (activeReportPayload && activeReportPayload.binary) || {};
+  const executablePath = (activeReportPayload && activeReportPayload.executable_path) || reportBinary.executable_path || 'analyzed executable';
+  document.getElementById('inspectorKind').textContent = item.risk;
+  document.getElementById('fileInfo').innerHTML =
+    '<strong>File Information</strong>' +
+    '<div class="kv"><span>Path</span><code>' + escapeHtml(executablePath) + '</code></div>' +
+    '<div class="kv"><span>Loader</span><code>Mach-O</code></div>' +
+    '<div class="kv"><span>Platform</span><code>' + escapeHtml(reportBinary.platform || 'unknown') + '</code></div>' +
+    '<div class="kv"><span>Signal</span><code>' + escapeHtml(item.summary) + '</code></div>';
+  document.getElementById('addressInfo').innerHTML =
+    '<strong>Address Information</strong>' +
+    '<div class="kv"><span>Address</span><code>' + escapeHtml(item.address) + '</code></div>' +
+    '<div class="kv"><span>Segment</span><code>' + escapeHtml(item.segment) + '</code></div>' +
+    '<div class="kv"><span>Section</span><code>' + escapeHtml(item.section) + '</code></div>' +
+    '<div class="kv"><span>Offset</span><code>' + escapeHtml(item.offset) + '</code></div>' +
+    '<div class="kv"><span>Size</span><code>' + escapeHtml(item.size) + '</code></div>' +
+    '<div class="kv"><span>Confidence</span><code>' + escapeHtml(item.confidence) + '</code></div>';
+  document.getElementById('xrefList').innerHTML = item.xrefs.map((xref) => '<li>' + escapeHtml(xref) + '</li>').join('');
+}
+
+function renderSectionMap(item) {
+  const sectionMap = document.getElementById('sectionMap');
+  sectionMap.innerHTML = sectionCells.map((cellClass, index) => {
+    const matchingItems = analysisDataset.filter((candidate) => candidate.mapClass === cellClass);
+    const target = matchingItems[index % Math.max(1, matchingItems.length)] || analysisDataset[0];
+    const active = item && target.id === item.id ? ' active' : '';
+    return '<button class="map-cell ' + cellClass + active + '" type="button" data-analysis-id="' + escapeHtml(target.id) + '" title="' + escapeHtml(target.name) + '"></button>';
+  }).join('');
+  sectionMap.querySelectorAll('[data-analysis-id]').forEach((cell) => {
+    cell.addEventListener('click', () => selectAnalysisItem(cell.dataset.analysisId, { clearSearch: true }));
+  });
+}
+
+function selectAnalysisItem(id, options = {}) {
+  if (options.clearSearch) {
+    searchInput.value = '';
+    staticFilter = 'all';
+    renderStaticFilters();
+  }
+  const item = analysisDataset.find((candidate) => candidate.id === id) || analysisDataset[0];
+  selectedAnalysisItemId = item.id;
+  renderSymbolList(currentAnalysisResults(), searchInput.value.trim());
+  renderDisassembly(item);
+  renderInspector(item);
+  renderSectionMap(item);
+}
+
+function currentAnalysisResults() {
+  const query = searchInput.value.trim().toLowerCase();
+  const scoped = staticFilter === 'all'
+    ? analysisDataset
+    : analysisDataset.filter((item) => item.filterGroup === staticFilter);
+  if (!query) return scoped;
+  return scoped.filter((item) => analysisSearchText(item).includes(query));
+}
+
+function renderStaticFilters() {
+  document.querySelectorAll('[data-static-filter]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.staticFilter === staticFilter);
+  });
+}
+
+function runtimeSearchText(event) {
+  return [
+    event.layer,
+    event.severity,
+    event.title,
+    event.operation,
+    event.value,
+    event.verdict,
+    event.summary,
+    ...event.stack,
+    ...event.correlation
+  ].join(' ').toLowerCase();
+}
+
+function currentRuntimeResults() {
+  const query = searchInput.value.trim().toLowerCase();
+  return runtimeEvents.filter((event) => {
+    const filterMatch = runtimeFilter === 'all' || event.layer === runtimeFilter;
+    const campaign = runtimeCampaigns.find((item) => item.id === selectedRuntimeCampaignId);
+    const campaignMatch = selectedRuntimeCampaignId === 'all' ||
+      (runtimeViewMode === 'planned'
+        ? (campaign && (campaign.probe_ids || []).includes(event.id))
+        : (campaign && (campaign.event_ids || []).includes(event.id)));
+    const queryMatch = !query || runtimeSearchText(event).includes(query);
+    return filterMatch && campaignMatch && queryMatch;
+  });
+}
+
+function renderRuntimeEvents(items) {
+  const list = document.getElementById('runtimeEventList');
+  document.getElementById('runtimeResultCount').textContent = String(items.length);
+  if (!items.length) {
+    list.innerHTML = '<div class="event-row"><span></span><strong>No ' + (runtimeViewMode === 'planned' ? 'probes' : 'runtime events') + ' matched</strong><i class="runtime-severity">0</i></div>';
+    return;
+  }
+  list.innerHTML = items.map((event) => {
+    const active = event.id === selectedRuntimeEventId ? ' active' : '';
+    return '<button class="event-row' + active + '" type="button" data-runtime-id="' + escapeHtml(event.id) + '">' +
+      '<span class="event-time">' + escapeHtml(event.time) + '</span>' +
+      '<div><strong>' + escapeHtml(event.title) + '</strong><span>' + escapeHtml(event.operation + ' · ' + event.value) + '</span></div>' +
+      '<i class="runtime-severity ' + escapeHtml(event.severity) + '">' + escapeHtml(event.layer) + '</i>' +
+      '</button>';
+  }).join('');
+  list.querySelectorAll('[data-runtime-id]').forEach((row) => {
+    row.addEventListener('click', () => selectRuntimeEvent(row.dataset.runtimeId));
+  });
+}
+
+function renderRuntimeSummary(items) {
+  const high = items.filter((event) => event.severity === 'high').length;
+  const network = items.filter((event) => event.layer === 'network').length;
+  const keychain = items.filter((event) => event.layer === 'keychain').length;
+  const process = items.filter((event) => event.layer === 'process').length;
+  const planned = runtimeViewMode === 'planned';
+  document.getElementById('runtimeSummary').innerHTML =
+    '<div class="runtime-card"><span>' + (planned ? 'Priority' : 'High Signals') + '</span><strong>' + high + '</strong><p>' + (planned ? 'probes to run' : 'runtime findings') + '</p></div>' +
+    '<div class="runtime-card"><span>Network</span><strong>' + network + '</strong><p>' + (planned ? 'targets to observe' : 'hosts and flows') + '</p></div>' +
+    '<div class="runtime-card"><span>Keychain</span><strong>' + keychain + '</strong><p>' + (planned ? 'hooks to attach' : 'securityd calls') + '</p></div>' +
+    '<div class="runtime-card"><span>Process</span><strong>' + process + '</strong><p>' + (planned ? 'calls to instrument' : 'privacy/private API') + '</p></div>';
+}
+
+function renderRuntimeTimeline(items, selectedEvent) {
+  const timeline = document.getElementById('runtimeTimeline');
+  timeline.innerHTML = runtimeEvents.map((event) => {
+    const hidden = !items.some((candidate) => candidate.id === event.id) ? ' opacity:0.25;' : '';
+    const active = selectedEvent && event.id === selectedEvent.id ? ' active' : '';
+    return '<button class="timeline-dot ' + escapeHtml(event.severity) + active + '" type="button" style="left:' + event.position + '%;' + hidden + '" data-runtime-id="' + escapeHtml(event.id) + '" title="' + escapeHtml(event.time + ' ' + event.title) + '"></button>';
+  }).join('');
+  timeline.querySelectorAll('[data-runtime-id]').forEach((dot) => {
+    dot.addEventListener('click', () => selectRuntimeEvent(dot.dataset.runtimeId));
+  });
+}
+
+function renderRuntimeTraceRows(items, selectedEvent) {
+  document.getElementById('runtimeTraceRows').innerHTML = items.map((event) => {
+    const active = selectedEvent && event.id === selectedEvent.id ? ' class="active"' : '';
+    return '<tr' + active + ' data-runtime-id="' + escapeHtml(event.id) + '">' +
+      '<td>' + escapeHtml(event.time) + '</td>' +
+      '<td>' + escapeHtml(event.layer) + '</td>' +
+      '<td><strong>' + escapeHtml(event.operation) + '</strong></td>' +
+      '<td>' + escapeHtml(event.value) + '</td>' +
+      '<td><span class="pill ' + (event.severity === 'high' ? 'red' : event.severity === 'medium' ? 'amber' : 'blue') + '">' + escapeHtml(event.verdict) + '</span></td>' +
+      '</tr>';
+  }).join('');
+  document.querySelectorAll('#runtimeTraceRows [data-runtime-id]').forEach((row) => {
+    row.addEventListener('click', () => selectRuntimeEvent(row.dataset.runtimeId));
+  });
+}
+
+function renderRuntimeInspector(event) {
+  document.getElementById('runtimeSeverity').textContent = event.severity;
+  const planned = runtimeViewMode === 'planned';
+  document.getElementById('runtimeEventInfo').innerHTML =
+    '<strong>' + (planned ? 'Probe Information' : 'Event Information') + '</strong>' +
+    '<div class="kv"><span>' + (planned ? 'Plan' : 'Time') + '</span><code>' + escapeHtml(event.time) + '</code></div>' +
+    '<div class="kv"><span>Layer</span><code>' + escapeHtml(event.layer) + '</code></div>' +
+    '<div class="kv"><span>Operation</span><code>' + escapeHtml(event.operation) + '</code></div>' +
+    '<div class="kv"><span>' + (planned ? 'Target' : 'Value') + '</span><code>' + escapeHtml(event.value) + '</code></div>' +
+    '<div class="kv"><span>' + (planned ? 'Status' : 'Verdict') + '</span><code>' + escapeHtml(event.verdict) + '</code></div>' +
+    '<div class="kv"><span>' + (planned ? 'Why' : 'Source') + '</span><code>' +
+    escapeHtml(planned ? event.summary : event.summary.replace('Source: ', '')) + '</code></div>';
+  document.getElementById('runtimeStack').innerHTML = event.stack.map((frame) => '<li>' + escapeHtml(frame) + '</li>').join('');
+  document.getElementById('runtimeCorrelation').innerHTML = event.correlation.map((item) => '<div class="correlation-item">' + escapeHtml(item) + '</div>').join('');
+}
+
+function selectRuntimeEvent(id) {
+  const visibleItems = currentRuntimeResults();
+  const event = runtimeEvents.find((candidate) => candidate.id === id) || visibleItems[0] || runtimeEvents[0];
+  selectedRuntimeEventId = event.id;
+  document.getElementById('runtimeTitle').textContent = event.title;
+  document.getElementById('runtimeMeta').textContent = event.time + ' · ' + event.layer + ' · ' + event.operation + (runtimeViewMode === 'planned' ? ' · unobserved' : '');
+  renderRuntimeSummary(visibleItems.length ? visibleItems : runtimeEvents);
+  renderRuntimeEvents(visibleItems);
+  renderRuntimeTimeline(visibleItems, event);
+  renderRuntimeTraceRows(visibleItems, event);
+  renderRuntimeInspector(event);
+}
+
+function searchRuntimeEvents(query) {
+  const needle = query.trim();
+  if (needle) {
+    selectedRuntimeCampaignId = 'all';
+    renderRuntimeCampaigns();
+    runtimeFilter = 'all';
+    document.querySelectorAll('[data-runtime-filter]').forEach((button) => button.classList.toggle('active', button.dataset.runtimeFilter === 'all'));
+  }
+  const matches = needle
+    ? runtimeEvents.filter((event) => runtimeSearchText(event).includes(needle.toLowerCase()))
+    : currentRuntimeResults();
+  renderRuntimeEvents(matches);
+  renderRuntimeSummary(matches);
+  if (matches[0]) selectRuntimeEvent(matches[0].id);
+  if (!needle && !matches.some((event) => event.id === selectedRuntimeEventId)) selectRuntimeEvent(runtimeEvents[0].id);
+  searchInput.setAttribute('aria-label', needle ? matches.length + ' runtime matches for ' + needle : 'Search IPA symbols, strings, runtime events');
+  if (needle) showToast(matches.length + ' runtime match' + (matches.length === 1 ? '' : 'es') + ' for "' + needle + '"');
+  if (needle && matches[0]) document.getElementById('evidence-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function searchWorkbench(query) {
+  const needle = query.trim().toLowerCase();
+  const activeTab = document.querySelector('.tab.active')?.dataset.tab || 'static';
+  if (activeTab === 'dynamic') {
+    searchRuntimeEvents(query);
+    return;
+  }
+  showStaticEvidence(true);
+  if (!needle) {
+    searchInput.setAttribute('aria-label', 'Search IPA symbols, strings, runtime events');
+    const scoped = currentAnalysisResults();
+    renderSymbolList(scoped, '');
+    if (scoped[0] && !scoped.find((item) => item.id === selectedAnalysisItemId)) selectAnalysisItem(scoped[0].id);
+    return;
+  }
+  staticFilter = 'all';
+  renderStaticFilters();
+  const matches = currentAnalysisResults();
+  const runtimeMatches = runtimeEvents.filter((event) => runtimeSearchText(event).includes(needle));
+  if (!matches.length && runtimeMatches.length) {
+    tabs.forEach((tab) => {
+      const isDynamic = tab.dataset.tab === 'dynamic';
+      tab.classList.toggle('active', isDynamic);
+      tab.setAttribute('aria-selected', isDynamic ? 'true' : 'false');
+    });
+    document.querySelectorAll('.artifact').forEach((panel) => panel.classList.toggle('active', panel.id === 'dynamic'));
+    runtimeFilter = 'all';
+    document.querySelectorAll('[data-runtime-filter]').forEach((button) => button.classList.toggle('active', button.dataset.runtimeFilter === 'all'));
+    searchRuntimeEvents(query);
+    document.getElementById('evidence-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  renderSymbolList(matches, query.trim());
+  if (matches[0]) {
+    selectAnalysisItem(matches[0].id);
+    document.getElementById('evidence-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    renderSectionMap();
+  }
+  searchInput.setAttribute('aria-label', matches.length + ' matches for ' + query);
+  showToast(matches.length + ' match' + (matches.length === 1 ? '' : 'es') + ' for "' + query + '"');
+}
+
+async function connectWorkbenchService() {
+  try {
+    const response = await fetch('/api/health', { cache: 'no-store' });
+    serviceAvailable = response.ok;
+    if (serviceAvailable) {
+      await refreshRuntimeAvailability();
+      const reports = await loadReportCatalog();
+      await loadRecentBatch();
+      if (reports.length) {
+        await loadSavedReport(reports[0].id, true);
+      } else {
+        setAnalysisProgress(0, 'Ready', 'Local analyzer connected. Select an IPA or load the sample.', 'idle');
+      }
+    }
+  } catch (error) {
+    serviceAvailable = false;
+    setAnalysisProgress(0, 'Viewer Mode', 'Launch iRE-Zero workbench service to run real IPA analysis.', 'idle');
+  }
+}
+
+async function refreshRuntimeAvailability() {
+  if (!serviceAvailable) return;
+  try {
+    const response = await fetch('/api/runtime/status', { cache: 'no-store' });
+    if (!response.ok) return;
+    runtimeCapability = await response.json();
+    const bootedSimulator = ((runtimeCapability.simulator_status || {}).booted_devices || [])[0];
+    if (bootedSimulator && bootedSimulator.id) {
+      localStorage.setItem('ire-zero-simulator-device-id', bootedSimulator.id);
+    }
+    if (!runtimeSessionId && (runtimeCapability.active_sessions || []).length) {
+      runtimeSessionId = runtimeCapability.active_sessions[0].id;
+      monitorRuntimeSession();
+      return;
+    }
+    renderRuntimeAvailability();
+    if (activeReportId && runtimeCapability.installed && !runtimeSessionId) {
+      const simulatorReady = Boolean(((runtimeCapability.environments || {}).simulator || {}).ready);
+      if (runtimeEnvironment === 'simulator' && simulatorReady) {
+        simulatorBootAttemptKey = '';
+      }
+      if (runtimeEnvironment === 'simulator' && !simulatorReady && simulatorBootAttemptKey !== activeReportId) {
+        simulatorBootAttemptKey = activeReportId;
+        await bootSimulator(true);
+        return;
+      }
+      await runRuntimePreflight(true);
+    } else {
+      renderRuntimeTargets();
+    }
+  } catch (error) {
+    runtimeCapability = null;
+    document.getElementById('runtimeRunnerStatus').textContent = 'offline';
+    document.getElementById('runtimeRunnerDetail').textContent = 'Live capture service is unavailable.';
+  }
+}
+
+function renderRuntimeAvailability() {
+  const status = document.getElementById('runtimeRunnerStatus');
+  const detail = document.getElementById('runtimeRunnerDetail');
+  const installed = runtimeCapability && runtimeCapability.installed;
+  const environments = (runtimeCapability && runtimeCapability.environments) || {};
+  const selectedEnvironment = environments[runtimeEnvironment] || {};
+  const ready = Boolean(selectedEnvironment.ready);
+  bootSimulatorButton.hidden = runtimeEnvironment !== 'simulator';
+  bootSimulatorButton.disabled = runtimeEnvironment !== 'simulator' || ready || simulatorBootInProgress || Boolean(runtimeSessionId);
+  bootSimulatorButton.textContent = simulatorBootInProgress ? 'Booting' : ready ? 'Booted' : 'Boot';
+  status.classList.remove('ready', 'live');
+  if (ready) {
+    const detectedDevice = (selectedEnvironment.devices || [])[0];
+    const name = typeof detectedDevice === 'object' ? detectedDevice.name : detectedDevice;
+    status.textContent = runtimeEnvironment === 'simulator' ? 'Simulator visible' : 'Device visible';
+    status.classList.add('ready');
+    detail.textContent = 'Frida installed · ' + (name || (runtimeEnvironment === 'simulator' ? 'booted Simulator' : 'USB iOS device')) + ' detected. Run target preflight.';
+  } else if (installed) {
+    status.textContent = 'Frida installed';
+    status.classList.add('ready');
+    detail.textContent = runtimeEnvironment === 'simulator'
+      ? 'No booted Xcode Simulator is available for Frida capture.'
+      : 'Connect an authorized USB iOS runtime with matching Frida Server, or import a trace.';
+  } else {
+    status.textContent = 'Frida missing';
+    detail.textContent = 'No local Frida executable; install Frida or import a trace.';
+  }
+  startRuntimeButton.disabled = !runtimePreflight || !runtimePreflight.capture_ready || Boolean(runtimeSessionId);
+  stopRuntimeButton.disabled = !runtimeSessionId;
+}
+
+async function refreshRuntimeTargets() {
+  if (!serviceAvailable || !activeReportId) {
+    runtimeTargets = null;
+    renderRuntimeTargets();
+    return;
+  }
+  const requestId = ++runtimeTargetsRequest;
+  try {
+    const response = await fetch('/api/runtime/targets?report_id=' + encodeURIComponent(activeReportId), { cache: 'no-store' });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Execution targets unavailable');
+    if (requestId !== runtimeTargetsRequest) return;
+    runtimeTargets = payload;
+    renderRuntimeTargets();
+  } catch (error) {
+    if (requestId !== runtimeTargetsRequest) return;
+    runtimeTargets = { error: String(error.message || error), targets: [] };
+    renderRuntimeTargets();
+  }
+}
+
+function renderRuntimeTargets() {
+  const bundle = document.getElementById('runtimeTargetBundle');
+  const boundary = document.getElementById('runtimeTargetBoundary');
+  const list = document.getElementById('runtimeTargetList');
+  installCompanionButton.hidden = runtimeEnvironment !== 'simulator';
+  if (!activeReportId || !runtimeTargets) {
+    bundle.textContent = activeReportPayload?.info_plist?.bundle_identifier || 'No analyzed bundle selected';
+    boundary.textContent = activeReportId ? 'resolving' : 'unpaired';
+    list.innerHTML = '<div class="execution-target-card"><i></i><div><strong>' +
+      (activeReportId ? 'Discovering targets' : 'Awaiting report') +
+      '</strong><span>' + (activeReportId ? 'Checking installed execution targets.' : 'Analyze an IPA to resolve execution targets.') + '</span></div></div>';
+    installCompanionButton.disabled = true;
+    launchTargetButton.disabled = true;
+    return;
+  }
+  bundle.textContent = runtimeTargets.bundle_identifier || 'Unknown bundle identifier';
+  const selected = (runtimeTargets.targets || []).find((target) => target.environment === runtimeEnvironment);
+  boundary.textContent = selected ? selected.boundary : 'unavailable';
+  if (runtimeTargets.error) {
+    list.innerHTML = '<div class="execution-target-card"><i></i><div><strong>Discovery failed</strong><span>' + escapeHtml(runtimeTargets.error) + '</span></div></div>';
+  } else {
+    list.innerHTML = (runtimeTargets.targets || []).map((target) => {
+      const selectedClass = target.environment === runtimeEnvironment ? ' selected' : '';
+      const state = target.state || 'unavailable';
+      const stateLabel = target.installed ? (target.running ? 'running' : 'installed') : (target.available ? 'not installed' : 'offline');
+      const candidateDetail = !target.installed && target.candidate ? target.candidate.name + ' build available' : '';
+      const detail = candidateDetail || target.device || target.detail || target.boundary;
+      return '<div class="execution-target-card ' + escapeHtml(state) + selectedClass + '">' +
+        '<i></i><div><strong>' + escapeHtml(target.label) + '</strong><span>' + escapeHtml(target.boundary) +
+        '</span><code>' + escapeHtml(detail) + '</code></div><code>' + escapeHtml(stateLabel) + '</code></div>';
+    }).join('');
+  }
+  const simulatorTarget = (runtimeTargets.targets || []).find((target) => target.environment === 'simulator');
+  const candidate = simulatorTarget && !simulatorTarget.installed ? simulatorTarget.candidate : null;
+  installCompanionButton.textContent = candidate ? 'Install Build' : 'Import .app';
+  installCompanionButton.dataset.candidatePath = candidate ? candidate.path : '';
+  installCompanionButton.disabled = runtimeEnvironment !== 'simulator' || targetActionInProgress || simulatorBootInProgress || !activeReportId;
+  launchTargetButton.disabled = runtimeEnvironment !== 'simulator' || targetActionInProgress || !simulatorTarget || !simulatorTarget.installed || !simulatorTarget.available;
+}
+
+async function bootSimulator(silent) {
+  if (!serviceAvailable || runtimeEnvironment !== 'simulator' || simulatorBootInProgress) return;
+  simulatorBootInProgress = true;
+  renderRuntimeAvailability();
+  const status = document.getElementById('runtimeRunnerStatus');
+  status.classList.remove('ready', 'live');
+  status.textContent = 'booting';
+  document.getElementById('runtimeRunnerDetail').textContent = 'Starting an available Xcode Simulator target and waiting for runtime services.';
+  document.getElementById('preflightChecks').innerHTML =
+    '<div class="preflight-check"><i></i><strong>Simulator</strong><span>Booting the preferred Xcode Simulator target for this analysis workflow...</span></div>';
+  document.getElementById('preflightNextStep').textContent = 'Preflight will resume automatically after Simulator runtime services are available.';
+  try {
+    const response = await fetch('/api/runtime/simulator/boot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_id: localStorage.getItem('ire-zero-simulator-device-id') || '' })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Simulator could not be booted');
+    if (payload.device && payload.device.id) {
+      localStorage.setItem('ire-zero-simulator-device-id', payload.device.id);
+    }
+    simulatorBootInProgress = false;
+    await refreshRuntimeAvailability();
+    await refreshRuntimeTargets();
+    if (!silent) showToast('Simulator is ready for preflight');
+  } catch (error) {
+    simulatorBootInProgress = false;
+    renderRuntimeAvailability();
+    renderRuntimePreflight(String(error.message || error));
+    showToast('Simulator boot failed');
+  }
+}
+
+async function runRuntimePreflight(silent) {
+  if (!activeReportId || !serviceAvailable) {
+    runtimePreflight = null;
+    renderRuntimePreflight();
+    return;
+  }
+  const requestId = ++runtimePreflightRequest;
+  runtimePreflight = null;
+  const currentStatus = document.getElementById('runtimeRunnerStatus');
+  currentStatus.classList.remove('ready', 'live');
+  currentStatus.textContent = 'checking';
+  document.getElementById('runtimeRunnerDetail').textContent = runtimeEnvironment === 'simulator'
+    ? 'Querying Xcode Simulator and Frida services without launching the target.'
+    : 'Querying Frida device services without launching the target.';
+  document.getElementById('preflightChecks').innerHTML =
+    '<div class="preflight-check"><i></i><strong>Preflight</strong><span>Checking ' +
+    escapeHtml(runtimeEnvironment) + ' ' + escapeHtml(runtimeCaptureMode) + ' readiness for the selected bundle...</span></div>';
+  document.getElementById('preflightNextStep').textContent = 'No app launch or instrumentation occurs during this check.';
+  startRuntimeButton.disabled = true;
+  refreshPreflightButton.disabled = true;
+  try {
+    const response = await fetch('/api/runtime/preflight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: activeReportId, capture_mode: runtimeCaptureMode, runtime_environment: runtimeEnvironment })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Device preflight failed');
+    if (requestId !== runtimePreflightRequest) return;
+    runtimePreflight = payload;
+    renderRuntimePreflight();
+    await refreshRuntimeTargets();
+    if (!silent) showToast(payload.capture_ready ? 'Runtime preflight passed' : 'Runtime preflight needs attention');
+  } catch (error) {
+    if (requestId !== runtimePreflightRequest) return;
+    runtimePreflight = null;
+    renderRuntimePreflight(String(error.message || error));
+    if (!silent) showToast(String(error.message || error));
+  } finally {
+    if (requestId === runtimePreflightRequest) refreshPreflightButton.disabled = false;
+  }
+}
+
+async function installSimulatorCompanion(files) {
+  if (!serviceAvailable || !activeReportId || !files || !files.length) return;
+  const entries = Array.from(files);
+  const relativePaths = entries.map((file) => file.webkitRelativePath || file.name);
+  if (!relativePaths.some((value) => value.split('/')[0].toLowerCase().endsWith('.app'))) {
+    showToast('Select a built Simulator .app folder');
+    companionAppInput.value = '';
+    return;
+  }
+  targetActionInProgress = true;
+  installCompanionButton.textContent = 'Installing';
+  renderRuntimeTargets();
+  const form = new FormData();
+  form.append('report_id', activeReportId);
+  entries.forEach((file, index) => {
+    form.append('bundle', file, file.name);
+    form.append('relative_path', relativePaths[index]);
+  });
+  try {
+    const response = await fetch('/api/runtime/targets/install', { method: 'POST', body: form });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Companion installation failed');
+    showToast('Simulator companion installed');
+    await runRuntimePreflight(true);
+  } catch (error) {
+    showToast(String(error.message || error));
+  } finally {
+    targetActionInProgress = false;
+    installCompanionButton.textContent = 'Install .app';
+    companionAppInput.value = '';
+    await refreshRuntimeTargets();
+  }
+}
+
+async function installDiscoveredCompanion(candidatePath) {
+  if (!serviceAvailable || !activeReportId || !candidatePath) return;
+  targetActionInProgress = true;
+  installCompanionButton.textContent = 'Installing';
+  renderRuntimeTargets();
+  try {
+    const response = await fetch('/api/runtime/targets/install-candidate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: activeReportId, candidate_path: candidatePath })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Build installation failed');
+    showToast('Simulator build installed');
+    await runRuntimePreflight(true);
+  } catch (error) {
+    showToast(String(error.message || error));
+  } finally {
+    targetActionInProgress = false;
+    await refreshRuntimeTargets();
+  }
+}
+
+async function launchRuntimeTarget() {
+  if (!serviceAvailable || !activeReportId || runtimeEnvironment !== 'simulator') return;
+  targetActionInProgress = true;
+  launchTargetButton.textContent = 'Launching';
+  renderRuntimeTargets();
+  try {
+    const response = await fetch('/api/runtime/targets/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: activeReportId, runtime_environment: runtimeEnvironment })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Target launch failed');
+    showToast('Simulator target launched');
+    await runRuntimePreflight(true);
+  } catch (error) {
+    showToast(String(error.message || error));
+  } finally {
+    targetActionInProgress = false;
+    launchTargetButton.textContent = 'Launch';
+    await refreshRuntimeTargets();
+  }
+}
+
+function renderRuntimePreflight(errorMessage) {
+  const status = document.getElementById('runtimeRunnerStatus');
+  const detail = document.getElementById('runtimeRunnerDetail');
+  const checklist = document.getElementById('preflightChecks');
+  const next = document.getElementById('preflightNextStep');
+  status.classList.remove('ready', 'live');
+  startRuntimeLabel.textContent = runtimeCaptureMode === 'attach' ? 'Attach' : runtimeCaptureMode === 'gadget' ? 'Guided' : 'Start';
+  if (!runtimePreflight) {
+    checklist.innerHTML = '<div class="preflight-check' + (errorMessage ? ' fail' : '') + '"><i></i><strong>Status</strong><span>' +
+      escapeHtml(errorMessage || (activeReportId ? 'Run preflight for this target.' : 'Awaiting target report.')) + '</span></div>';
+    next.textContent = runtimeCaptureMode === 'gadget'
+      ? 'Prepare and re-sign an authorized Gadget-patched IPA, then import the resulting trace.'
+      : 'Preflight verifies the selected runtime target before any instrumentation begins.';
+    startRuntimeButton.disabled = true;
+    return;
+  }
+  checklist.innerHTML = (runtimePreflight.checks || []).map((check) =>
+    '<div class="preflight-check ' + escapeHtml(check.state) + '"><i></i><strong>' + escapeHtml(check.label) +
+    '</strong><span>' + escapeHtml(check.detail) + '</span></div>'
+  ).join('');
+  next.textContent = (runtimePreflight.next_steps || []).join(' ');
+  if (runtimePreflight.capture_ready) {
+    status.textContent = runtimeCaptureMode === 'attach' ? 'Attach ready' : 'Spawn ready';
+    status.classList.add('ready');
+    detail.textContent = 'Target verified for ' + runtimeCaptureMode + ' capture. Starting will instrument the authorized ' +
+      (runtimeEnvironment === 'simulator' ? 'Simulator target.' : 'device.');
+  } else if (runtimeCaptureMode === 'gadget') {
+    status.textContent = 'Gadget setup';
+    detail.textContent = 'Live Gadget capture requires a patched and re-signed authorized IPA.';
+  } else {
+    status.textContent = 'Preflight blocked';
+    detail.textContent = 'Resolve the failed checks before starting live capture.';
+  }
+  startRuntimeButton.disabled = !runtimePreflight.capture_ready || Boolean(runtimeSessionId);
+}
+
+async function startRuntimeCapture() {
+  if (!activeReportId || !runtimePreflight || !runtimePreflight.capture_ready) return;
+  startRuntimeButton.disabled = true;
+  try {
+    const response = await fetch('/api/runtime/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: activeReportId, capture_mode: runtimeCaptureMode, runtime_environment: runtimeEnvironment })
+    });
+    const session = await response.json();
+    if (!response.ok) throw new Error(session.error || 'Could not start capture');
+    runtimeSessionId = session.id;
+    renderRuntimeSession(session);
+    monitorRuntimeSession();
+    showToast('Live capture session started');
+  } catch (error) {
+    renderRuntimeAvailability();
+    showToast(String(error.message || error));
+  }
+}
+
+async function stopRuntimeCapture() {
+  if (!runtimeSessionId) return;
+  stopRuntimeButton.disabled = true;
+  const response = await fetch('/api/runtime/sessions/' + encodeURIComponent(runtimeSessionId) + '/stop', { method: 'POST' });
+  const session = await response.json();
+  if (response.ok) renderRuntimeSession(session);
+}
+
+async function monitorRuntimeSession() {
+  clearTimeout(runtimeSessionPollTimer);
+  if (!runtimeSessionId) return;
+  try {
+    const response = await fetch('/api/runtime/sessions/' + encodeURIComponent(runtimeSessionId), { cache: 'no-store' });
+    const session = await response.json();
+    if (!response.ok) throw new Error(session.error || 'Capture session unavailable');
+    renderRuntimeSession(session);
+    if (['queued', 'starting', 'running', 'stopping', 'finalizing'].includes(session.state)) {
+      runtimeSessionPollTimer = setTimeout(monitorRuntimeSession, 600);
+      return;
+    }
+    runtimeSessionId = '';
+    if (session.result_report_id) {
+      await loadReportCatalog();
+      await loadSavedReport(session.result_report_id, true);
+      showToast('Captured evidence merged into a new report');
+    } else if (activeReportPayload) {
+      loadDynamicEvidenceFromReport(activeReportPayload.dynamic || { status: 'not_captured', events: [] }, activeReportPayload);
+      refreshRuntimeAvailability();
+    }
+  } catch (error) {
+    runtimeSessionId = '';
+    renderRuntimeAvailability();
+    showToast(String(error.message || error));
+  }
+}
+
+function renderRuntimeSession(session) {
+  const status = document.getElementById('runtimeRunnerStatus');
+  status.classList.add('live');
+  status.textContent = session.state;
+  document.getElementById('runtimeRunnerDetail').textContent = session.phase + ' · ' + session.event_count + ' observed event' + (session.event_count === 1 ? '' : 's');
+  startRuntimeButton.disabled = true;
+  stopRuntimeButton.disabled = !['queued', 'starting', 'running'].includes(session.state);
+  if ((session.events || []).length && activeReportPayload) {
+    loadDynamicEvidenceFromReport({
+      status: session.runtime_environment === 'simulator' ? 'captured (companion build)' : 'captured',
+      capture_mode: session.runtime_environment === 'simulator' ? 'companion_build' : 'exact_ipa',
+      source: session.runtime_environment === 'simulator' ? 'Frida Simulator live capture' : 'Frida USB device live capture',
+      evidence_source: session.runtime_environment === 'simulator' ? 'Frida Simulator live capture' : 'Frida USB device live capture',
+      session: session.id,
+      events: session.events
+    }, activeReportPayload);
+  }
+}
+
+async function loadReportCatalog() {
+  if (!serviceAvailable) return [];
+  const response = await fetch('/api/reports', { cache: 'no-store' });
+  if (!response.ok) return [];
+  const payload = await response.json();
+  const catalogNames = new Set();
+  reportSelector.innerHTML = '<option value="">Saved reports</option>';
+  (payload.reports || []).forEach((report) => {
+    const name = report.app_name + '.ipa';
+    if (catalogNames.has(name)) return;
+    catalogNames.add(name);
+    targetProfiles[name] = {
+      name: name,
+      meta: [report.bundle_identifier || 'unknown bundle', 'saved report', String(report.dynamic_status).replaceAll('_', ' '), report.id],
+      fileMeta: 'Saved analysis report',
+      score: report.score,
+      scoreLabel: report.score >= 70 ? 'high' : report.score >= 35 ? 'elevated' : 'low',
+      queueStatus: report.findings + ' findings',
+      dotColor: report.score >= 70 ? 'amber' : 'green',
+      reportId: report.id
+    };
+    addQueueRow(name, report.findings + ' findings', report.score >= 70 ? 'amber' : 'green', false);
+    const option = document.createElement('option');
+    option.value = report.id;
+    option.textContent = report.app_name + ' · ' + report.score + '/100';
+    reportSelector.appendChild(option);
+  });
+  if (activeReportId && Array.from(reportSelector.options).some((option) => option.value === activeReportId)) {
+    reportSelector.value = activeReportId;
+  }
+  return payload.reports || [];
+}
+
+async function loadSavedReport(id, silent) {
+  if (!serviceAvailable || !id) return;
+  const response = await fetch('/api/reports/' + encodeURIComponent(id), { cache: 'no-store' });
+  if (!response.ok) {
+    showToast('Saved report could not be loaded');
+    return;
+  }
+  const payload = await response.json();
+  payload.report.analyst_notes = payload.analyst_notes || [];
+  applyReport(payload.report, payload.id);
+  if (!silent) showToast('Loaded report ' + payload.id);
+}
+
+runButton.addEventListener('click', () => {
+  runAnalysis();
+});
+
+sampleButton.addEventListener('click', async () => {
+  if (!serviceAvailable) {
+    showToast('Start the workbench service to analyze the sample');
+    return;
+  }
+  activeReportId = '';
+  activeReportPayload = null;
+  setTarget(sampleProfiles.synthetic);
+  await submitJob('/api/sample', { method: 'POST' });
+});
+
+newTargetButton.addEventListener('click', createNewTarget);
+previousTargetButton.addEventListener('click', () => navigateTarget(-1));
+nextTargetButton.addEventListener('click', () => navigateTarget(1));
+deleteTargetButton.addEventListener('click', () => {
+  const name = activeQueueName();
+  if (!name) {
+    showToast('No active target to delete');
+    return;
+  }
+  deleteQueueTarget(name);
+});
+selectIpaButton.addEventListener('click', () => ipaInput.click());
+importFolderButton.addEventListener('click', () => folderInput.click());
+captureButton.addEventListener('click', () => traceInput.click());
+startRuntimeButton.addEventListener('click', startRuntimeCapture);
+stopRuntimeButton.addEventListener('click', stopRuntimeCapture);
+refreshPreflightButton.addEventListener('click', () => runRuntimePreflight(false));
+bootSimulatorButton.addEventListener('click', () => bootSimulator(false));
+installCompanionButton.addEventListener('click', () => {
+  const candidatePath = installCompanionButton.dataset.candidatePath;
+  if (candidatePath) {
+    installDiscoveredCompanion(candidatePath);
+  } else {
+    companionAppInput.click();
+  }
+});
+launchTargetButton.addEventListener('click', launchRuntimeTarget);
+runtimeEnvironmentButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    runtimeEnvironment = button.dataset.runtimeEnvironment;
+    localStorage.setItem('ire-zero-runtime-environment', runtimeEnvironment);
+    simulatorBootAttemptKey = '';
+    runtimeEnvironmentButtons.forEach((item) => item.classList.toggle('active', item === button));
+    runtimePreflight = null;
+    renderRuntimeAvailability();
+    refreshRuntimeAvailability();
+  });
+});
+captureModeButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    runtimeCaptureMode = button.dataset.captureMode;
+    captureModeButtons.forEach((item) => item.classList.toggle('active', item === button));
+    runtimePreflight = null;
+    renderRuntimePreflight();
+    runRuntimePreflight(false);
+  });
+});
+linkStaticEvidenceButton.addEventListener('click', linkSelectedStaticEvidence);
+linkRuntimeEvidenceButton.addEventListener('click', linkSelectedRuntimeEvidence);
+saveAnalystNoteButton.addEventListener('click', saveAnalystNote);
+exportAnalystNotesButton.addEventListener('click', () => {
+  if (activeReportId) {
+    window.open('/reports/' + encodeURIComponent(activeReportId) + '/analyst-notes.md', '_blank');
+  } else {
+    showToast('Load a report before exporting notes');
+  }
+});
+openBatchIndexButton.addEventListener('click', () => {
+  if (latestBatchIndexUrl) window.open(latestBatchIndexUrl, '_blank');
+});
+runtimePlanButton.addEventListener('click', () => {
+  if (activeReportId) {
+    window.open('/reports/' + encodeURIComponent(activeReportId) + '/runtime-plan.md', '_blank');
+  } else {
+    showToast('Run or load a report to generate a capture plan');
+  }
+});
+hookScriptButton.addEventListener('click', () => {
+  if (activeReportId) {
+    window.open('/reports/' + encodeURIComponent(activeReportId) + '/frida-hooks.js', '_blank');
+  } else {
+    showToast('Run or load a report to generate Frida hooks');
+  }
+});
+exportButton.addEventListener('click', () => {
+  if (activeReportId) {
+    window.open('/reports/' + encodeURIComponent(activeReportId) + '/report.html', '_blank');
+  } else {
+    showToast('Run or load a report before exporting');
+  }
+});
+reportSelector.addEventListener('change', () => {
+  if (reportSelector.value) loadSavedReport(reportSelector.value);
+});
+ipaInput.addEventListener('change', () => updateFromFile(ipaInput.files[0]));
+folderInput.addEventListener('change', () => importFolder(folderInput.files));
+traceInput.addEventListener('change', async () => {
+  pendingTraceFile = traceInput.files[0] || null;
+  if (!pendingTraceFile) return;
+  if (serviceAvailable && activeReportId && activeReportPayload) {
+    const form = new FormData();
+    form.append('report_id', activeReportId);
+    form.append('trace', pendingTraceFile, pendingTraceFile.name);
+    await submitJob('/api/runtime/import', { method: 'POST', body: form });
+    traceInput.value = '';
+    return;
+  }
+  showToast(pendingTraceFile.name + ' will be correlated on the next single-IPA run');
+});
+companionAppInput.addEventListener('change', () => installSimulatorCompanion(companionAppInput.files));
+searchInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') searchWorkbench(searchInput.value);
+  if (event.key === 'Escape') {
+    searchInput.value = '';
+    searchWorkbench('');
+  }
+});
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => searchWorkbench(searchInput.value), 220);
+});
+
+document.querySelectorAll('[data-runtime-filter]').forEach((button) => {
+  button.addEventListener('click', () => {
+    runtimeFilter = button.dataset.runtimeFilter;
+    document.querySelectorAll('[data-runtime-filter]').forEach((item) => item.classList.toggle('active', item === button));
+    const results = currentRuntimeResults();
+    if (results[0]) {
+      selectRuntimeEvent(results[0].id);
+    } else {
+      renderRuntimeEvents(results);
+      renderRuntimeSummary(results);
+      renderRuntimeTimeline(results);
+      showToast('No ' + runtimeFilter + ' runtime events matched');
+    }
+  });
+});
+
+document.querySelectorAll('[data-static-filter]').forEach((button) => {
+  button.addEventListener('click', () => {
+    staticFilter = button.dataset.staticFilter;
+    searchInput.value = '';
+    renderStaticFilters();
+    const results = currentAnalysisResults();
+    if (results[0]) {
+      selectAnalysisItem(results[0].id);
+    } else {
+      renderSymbolList(results, '');
+      showToast('No ' + staticFilter.replace('-', ' ') + ' artifacts recovered');
+    }
+  });
+});
+
+tabs.forEach((tab) => {
+  tab.setAttribute('role', 'tab');
+  tab.setAttribute('aria-selected', tab.classList.contains('active') ? 'true' : 'false');
+});
+
+runtimeEnvironmentButtons.forEach((button) => {
+  button.classList.toggle('active', button.dataset.runtimeEnvironment === runtimeEnvironment);
+});
+bootSimulatorButton.hidden = runtimeEnvironment !== 'simulator';
+renderRuntimeTargets();
+
+function initializeQueue() {
+  targetProfiles[sampleProfiles.bank.name] = sampleProfiles.bank;
+  targetProfiles[sampleProfiles.default.name] = sampleProfiles.default;
+  targetProfiles[sampleProfiles.chatkit.name] = sampleProfiles.chatkit;
+  document.querySelectorAll('.queue-row').forEach((row) => {
+    const name = row.querySelector('strong')?.textContent || '';
+    row.dataset.targetName = name;
+    ensureQueueControls(row);
+    row.classList.toggle('active', name === sampleProfiles.default.name);
+  });
+  updateTargetView(sampleProfiles.default);
+  updateTargetManagerButtons();
+}
+
+initializeQueue();
+selectAnalysisItem('objc-sync-token');
+selectRuntimeEvent('rt-keychain-add');
+connectWorkbenchService();
+</script>
+</body>
+</html>

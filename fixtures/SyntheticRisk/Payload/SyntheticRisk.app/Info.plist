@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>com.example.syntheticrisk</string>
+  <key>CFBundleName</key>
+  <string>SyntheticRisk</string>
+  <key>CFBundleExecutable</key>
+  <string>SyntheticRisk</string>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>synthetic-auth</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>syntheticrisk</string>
+      </array>
+    </dict>
+  </array>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+    <key>NSExceptionDomains</key>
+    <dict>
+      <key>insecure.example.test</key>
+      <dict>
+        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+        <true/>
+      </dict>
+    </dict>
+  </dict>
+  <key>LSApplicationQueriesSchemes</key>
+  <array>
+    <string>cydia</string>
+    <string>fb</string>
+  </array>
+</dict>
+</plist>
