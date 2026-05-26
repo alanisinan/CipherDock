@@ -1,0 +1,110 @@
+{
+  "base_ipa": "/path/to/project/eval/corpus/benign/vlc-ios.ipa",
+  "base_sha256": "ca6fed845da7ade1c8f1d8b76b353a68ad1af2acc0f9d0bafa4572a39f2d4381",
+  "code_signature_note": "Variant modification invalidates any original code signature; use only for static evaluation.",
+  "purpose": "Controlled static-analysis positive fixtures; not deployable app releases.",
+  "schema": "ire-zero-synthetic-corpus-v1",
+  "variant_type": "subtle",
+  "variants": [
+    {
+      "behaviors": [
+        "encoded_secret"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle001",
+      "file": "vlc-ios__irez.subtle001.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle001.ipa",
+      "sha256": "47e6e6f8225d141edf4d28c88d7c2d61d95dbfaf4f4ab37b88ce142b1be871fa",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "misspelled_jailbreak"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle002",
+      "file": "vlc-ios__irez.subtle002.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle002.ipa",
+      "sha256": "ea3ed7b6391e2001173ecd3468063428d73c71035f034d642c68425c1390b752",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "plausible_endpoint"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle003",
+      "file": "vlc-ios__irez.subtle003.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle003.ipa",
+      "sha256": "c4442b3ab30300c7a1324d9d7afa4ef6fe18de538e4826f5f506f4853f86c6e6",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "encoded_secret"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle004",
+      "file": "vlc-ios__irez.subtle004.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle004.ipa",
+      "sha256": "55bad527b96945140061465c4ac13346c37ca9e2c3f4e2609c2a82bb3047f2b4",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "misspelled_jailbreak"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle005",
+      "file": "vlc-ios__irez.subtle005.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle005.ipa",
+      "sha256": "637fc01b47596a9831fb3876f383aea2d00ed5925f9db28c9700e5f3f7c1f729",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "plausible_endpoint"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle006",
+      "file": "vlc-ios__irez.subtle006.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle006.ipa",
+      "sha256": "186264b200280dd5a08c10bd429e2682d8cb242042d3cb514ec855b0666355d2",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "encoded_secret"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle007",
+      "file": "vlc-ios__irez.subtle007.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle007.ipa",
+      "sha256": "9aa153f398a0a5b233f27750e7487c0fec533f1e352282867b067a6a1f311342",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "misspelled_jailbreak"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle008",
+      "file": "vlc-ios__irez.subtle008.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle008.ipa",
+      "sha256": "0a2b1b01a88370b1c24b3fdf03a2d23593ff237329b42dd6382fa1af07165a89",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "plausible_endpoint"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle009",
+      "file": "vlc-ios__irez.subtle009.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle009.ipa",
+      "sha256": "a7711c94c5de0c9f4ae0834f955e33ecf1822e990d91c75e33dd5f57a058c1c6",
+      "variant_type": "subtle"
+    },
+    {
+      "behaviors": [
+        "encoded_secret"
+      ],
+      "bundle_identifier": "org.videolan.vlc-ios.irez.subtle010",
+      "file": "vlc-ios__irez.subtle010.ipa",
+      "relative_path": "subtle/vlc-ios__irez.subtle010.ipa",
+      "sha256": "3a5c4fe56c2f684bcaf6aec05fc8332c0ea9ae2d7daf0fdc8587f0fb20f64e1e",
+      "variant_type": "subtle"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+__TEXT synthetic Mach-O placeholder
+https://api.example.test/v1/login
+http://insecure.example.test/collect
+10.20.30.40
+client_secret=abc123synthetic
+Authorization: Bearer synthetic-token-value
+/Applications/Cydia.app
+frida-server
+substrate
+keychain
+pasteboard
+_OBJC_CLASS_$_LSApplicationWorkspace
+MobileInstallationLookup
+CPDistributedMessagingCenter
+AppSupport.framework

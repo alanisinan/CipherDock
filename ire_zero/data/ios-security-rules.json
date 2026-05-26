@@ -1,0 +1,96 @@
+[
+  {
+    "id": "rule.private.appsupport.messaging",
+    "pattern": "CPDistributedMessagingCenter",
+    "severity": "medium",
+    "category": "private-api",
+    "description": "Private AppSupport distributed messaging API reference"
+  },
+  {
+    "id": "rule.private.springboard",
+    "pattern": "SBApplicationController|SpringBoardServices|BackBoardServices",
+    "severity": "medium",
+    "category": "private-api",
+    "description": "SpringBoard or BackBoard private framework reference",
+    "regex": true
+  },
+  {
+    "id": "rule.private.graphicsservices",
+    "pattern": "GraphicsServices.framework",
+    "severity": "medium",
+    "category": "private-api",
+    "description": "GraphicsServices private framework reference"
+  },
+  {
+    "id": "rule.instrumentation.frida",
+    "pattern": "frida|gum-js-loop|GadgetConfig|re.frida.server",
+    "severity": "medium",
+    "category": "anti-analysis",
+    "description": "Frida instrumentation marker",
+    "regex": true
+  },
+  {
+    "id": "rule.instrumentation.substrate",
+    "pattern": "CydiaSubstrate|MobileSubstrate|substrate",
+    "severity": "medium",
+    "category": "anti-analysis",
+    "description": "Substrate instrumentation or jailbreak marker",
+    "regex": true
+  },
+  {
+    "id": "rule.jailbreak.paths",
+    "pattern": "/Applications/Cydia.app|/Library/MobileSubstrate|/bin/bash|/usr/sbin/sshd|/private/var/lib/apt",
+    "severity": "medium",
+    "category": "anti-analysis",
+    "description": "Common jailbreak filesystem path",
+    "regex": true
+  },
+  {
+    "id": "rule.sensitive.keychain",
+    "pattern": "kSecAttrAccessibleAlways|kSecAttrAccessibleAfterFirstUnlock|SecItemAdd|SecItemCopyMatching",
+    "severity": "low",
+    "category": "sensitive-storage",
+    "description": "Keychain API or weak keychain accessibility marker",
+    "regex": true
+  },
+  {
+    "id": "rule.sensitive.pasteboard",
+    "pattern": "UIPasteboard|generalPasteboard|pasteboard",
+    "severity": "low",
+    "category": "sensitive-storage",
+    "description": "Pasteboard access marker",
+    "regex": true
+  },
+  {
+    "id": "rule.secret.google_api",
+    "pattern": "AIza[0-9A-Za-z_-]{20,}",
+    "severity": "high",
+    "category": "secrets",
+    "description": "Possible Google API key",
+    "regex": true
+  },
+  {
+    "id": "rule.secret.slack",
+    "pattern": "xox[baprs]-[0-9A-Za-z-]{20,}",
+    "severity": "high",
+    "category": "secrets",
+    "description": "Possible Slack token",
+    "regex": true
+  },
+  {
+    "id": "rule.tracker.sdk",
+    "pattern": "AppsFlyer|AdjustSDK|ADJEvent|FirebaseAnalytics|GoogleAnalytics|Amplitude|SEGAnalytics|BranchSDK|BranchUniversalObject|Mixpanel",
+    "severity": "info",
+    "category": "third-party-sdk",
+    "description": "Analytics or attribution SDK marker",
+    "regex": true
+  },
+  {
+    "id": "rule.urlscheme.social_probe",
+    "pattern": "canOpenURL|LSApplicationQueriesSchemes",
+    "severity": "info",
+    "category": "url-scheme",
+    "description": "URL scheme probing marker",
+    "regex": true
+  }
+]
