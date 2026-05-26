@@ -88,10 +88,6 @@ documented in eval/corpus/BUILD.md.
 IPA files are not distributed in this repository.
 See eval/corpus/BUILD.md for build instructions.
 
-## Paper
-
-Submitted to Computers & Security (Elsevier).
-Preprint: [to appear]
 
 ## Project Structure
 
