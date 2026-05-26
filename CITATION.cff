@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use CipherDock, please cite it as below."
+title: "CipherDock: A Jailbreak-Free Hybrid Static-Dynamic iOS Application Analysis Framework"
+authors:
+  - family-names: Ameen Noman
+    given-names: Sinan
+  - family-names: Ameen Noman
+    given-names: Haitham
+version: 1.0.0
+date-released: 2026-05-26
+url: "https://github.com/alanisinan/CipherDock"
+license: MIT
+abstract: "A jailbreak-free hybrid static-dynamic iOS IPA analysis 
+  framework with deterministic risk scoring across seven evidence-weighted 
+  categories, Frida companion-build dynamic capture, and cross-layer 
+  endpoint correlation. Evaluated on a 35-IPA corpus achieving 
+  F1=0.9474 (95% CI [0.8235, 1.0000])."
+keywords:
+  - iOS security
+  - IPA analysis
+  - static analysis
+  - dynamic analysis
+  - Frida
+  - jailbreak-free
+  - mobile security
+  - reverse engineering
