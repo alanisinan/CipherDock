@@ -4,13 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ire-zero"
-version = "0.1.0"
+version = "1.0.0"
 description = "Hybrid iOS IPA security analyzer and local workbench with evidence-backed reports."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [{ name = "iRE-Zero contributors" }]
 license = { text = "MIT" }
 dependencies = []
+
+[project.optional-dependencies]
+dynamic = [
+    "frida>=17.0,<18.0",
+    "frida-tools>=13.7",
+    "objection>=1.11",
+]
 
 [project.scripts]
 ire-zero = "ire_zero.cli:main"

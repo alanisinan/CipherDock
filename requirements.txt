@@ -1,1 +1,4 @@
--e .
+# Optional dynamic-capture tooling used by the workbench runtime workflow.
+frida>=17.0,<18.0
+frida-tools>=13.7
+objection>=1.11

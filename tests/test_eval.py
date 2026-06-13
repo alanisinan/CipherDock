@@ -2,9 +2,10 @@
 
 import csv
 import json
-import shutil
+import plistlib
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from eval.common import load_labels, sample_candidates, upsert_label_rows
@@ -18,6 +19,28 @@ from eval.verify_corpus import main as verify_corpus_main
 from eval.run_corpus import sha256_file
 from ire_zero.analyzer import analyze_ipa
 from ire_zero.rules import load_rules
+
+
+def write_test_ipa(path: Path, bundle_identifier: str = "org.irezero.syntheticrisk") -> None:
+    """Create a tiny IPA fixture for static-analysis and corpus tests."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    info_plist = {
+        "CFBundleIdentifier": bundle_identifier,
+        "CFBundleName": "SyntheticRisk",
+        "CFBundleExecutable": "SyntheticRisk",
+        "CFBundleURLTypes": [{"CFBundleURLSchemes": ["syntheticrisk"]}],
+        "NSAppTransportSecurity": {"NSAllowsArbitraryLoads": False},
+        "LSApplicationQueriesSchemes": ["https"],
+    }
+    executable = (
+        b"IREZero SyntheticRisk fixture\n"
+        b"https://api.synthetic-risk.example.invalid/v1/status\n"
+        b"http://insecure.synthetic-risk.example.invalid/debug\n"
+        b"NSURLSession Keychain UIPasteboard\n"
+    )
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("Payload/SyntheticRisk.app/Info.plist", plistlib.dumps(info_plist, fmt=plistlib.FMT_XML))
+        archive.writestr("Payload/SyntheticRisk.app/SyntheticRisk", executable)
 
 
 class EvaluationTests(unittest.TestCase):
@@ -100,7 +123,8 @@ class EvaluationTests(unittest.TestCase):
             root = Path(tmp)
             labels = root / "corpus" / "labels.csv"
             variants = root / "corpus" / "synthetic"
-            source = Path(__file__).parents[1] / "fixtures" / "SyntheticRisk" / "SyntheticRisk.ipa"
+            source = root / "fixtures" / "SyntheticRisk.ipa"
+            write_test_ipa(source)
 
             exit_code = synthetic_builder_main(
                 [
@@ -136,7 +160,8 @@ class EvaluationTests(unittest.TestCase):
             root = Path(tmp)
             labels = root / "corpus" / "labels.csv"
             variants = root / "corpus" / "subtle"
-            source = Path(__file__).parents[1] / "fixtures" / "SyntheticRisk" / "SyntheticRisk.ipa"
+            source = root / "fixtures" / "SyntheticRisk.ipa"
+            write_test_ipa(source)
 
             exit_code = synthetic_builder_main(
                 [
@@ -168,9 +193,8 @@ class EvaluationTests(unittest.TestCase):
             root = Path(tmp)
             corpus = root / "corpus"
             corpus.mkdir()
-            source = Path(__file__).parents[1] / "fixtures" / "SyntheticRisk" / "SyntheticRisk.ipa"
-            ipa = corpus / source.name
-            ipa.write_bytes(source.read_bytes())
+            ipa = corpus / "SyntheticRisk.ipa"
+            write_test_ipa(ipa)
             labels = root / "labels.csv"
             labels.write_text("ipa_file,label\nSyntheticRisk.ipa,vulnerable\n", encoding="utf-8")
             output = root / "results.csv"
@@ -273,9 +297,8 @@ class EvaluationTests(unittest.TestCase):
             corpus = root / "corpus"
             benign = corpus / "benign"
             benign.mkdir(parents=True)
-            source = Path(__file__).parents[1] / "fixtures" / "SyntheticRisk" / "SyntheticRisk.ipa"
             base = benign / "base.ipa"
-            shutil.copy2(source, base)
+            write_test_ipa(base)
             labels = corpus / "labels.csv"
             upsert_label_rows(
                 labels,
@@ -287,7 +310,7 @@ class EvaluationTests(unittest.TestCase):
                         "sha256": "",
                         "label": "negative",
                         "benchmark_role": "test control",
-                        "source": str(source),
+                        "source": "generated test fixture",
                         "status": "ready",
                     }
                 ],

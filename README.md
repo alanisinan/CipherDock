@@ -1,23 +1,22 @@
 # CipherDock
 
-A jailbreak-free hybrid static-dynamic iOS IPA
-analysis framework.
+A jailbreak-free hybrid static-dynamic iOS IPA security assessment framework.
 
 ## What It Does
 
-CipherDock accepts authorized iOS IPA files and
-produces a deterministic risk score across seven
-evidence-weighted categories: transport security,
-hardcoded secrets, private API usage, jailbreak
-detection, network endpoints, entitlements, and
-symbol intelligence.
+CipherDock accepts authorized iOS IPA files, unpacks them safely, extracts
+application metadata and Mach-O evidence, scans strings and symbols, and
+produces a deterministic risk score across seven evidence-weighted categories:
+transport security, hardcoded secrets, private API usage, jailbreak detection,
+network endpoints, entitlements, and symbol intelligence.
 
-It optionally captures live Frida runtime events
-from an authorized Simulator or device target and
-performs cross-layer correlation between static
-and dynamic evidence — classifying each captured
-event as CONFIRMED, DOMAIN_MATCH, or DYNAMIC_ONLY
-against static URL evidence.
+It optionally captures live Frida runtime events from an authorized Simulator or
+device target and performs cross-layer correlation between static and dynamic
+evidence, classifying each captured event as CONFIRMED, DOMAIN_MATCH, or
+DYNAMIC_ONLY against static URL evidence.
+
+CipherDock is designed for authorized security research, internal app review,
+and reproducible paper evaluation workflows.
 
 ## Workbench Screenshots
 
@@ -39,31 +38,88 @@ Dynamic evidence view showing the captured `NSURLSession` endpoint and its
 ## Requirements
 
 - Python 3.11+
-- macOS (for codesign, otool, nm)
+- macOS for complete iOS IPA analysis
 - Xcode Command Line Tools
-- Frida 17.9+ (optional, for dynamic capture)
-- Ghidra (optional, for symbol enrichment)
+- Apple command-line tools used by the analyzer: `codesign`, `otool`, and `nm`
+- Frida 17.9+ for optional dynamic capture
+- Objection for optional device-assisted workflows
+- Ghidra `analyzeHeadless` for optional symbol enrichment
+
+Linux can run the pure-Python parsing and report-generation paths, but macOS is
+recommended for complete iOS IPA analysis because Apple's binary and signing
+tools are macOS-native.
 
 ## Installation
 
+```bash
+pip install -e .
+```
+
+Install the optional Frida/Objection workflow helpers when you want dynamic
+capture support in the same environment:
+
+```bash
 pip install -r requirements.txt
+```
 
-## Usage
+## Quick Start
 
-# Analyze a single IPA
-python -m ire_zero analyze app.ipa
+Analyze one authorized IPA and write JSON, Markdown, SARIF, HTML, and Frida hook
+artifacts to a report directory:
 
-# Launch browser workbench
+```bash
+python -m ire_zero analyze app.ipa --sarif --html
+```
+
+Write reports to a specific output directory:
+
+```bash
+python -m ire_zero analyze app.ipa --output reports/app --sarif --html
+```
+
+Launch the local browser workbench:
+
+```bash
 python webapp.py
+```
 
-# Run full corpus evaluation
+Run the tool health check:
+
+```bash
+python -m ire_zero doctor
+```
+
+Run the evaluation pipeline:
+
+```bash
 python eval/run_all.py
+```
 
-# Verify corpus integrity (35/35 expected)
+Verify corpus integrity:
+
+```bash
 python eval/verify_corpus.py
+```
 
-# Generate paper abstract from current numbers
+Generate a paper abstract from the current evaluation numbers:
+
+```bash
 python eval/generate_abstract.py
+```
+
+## Sample Output
+
+An analysis run with `--sarif --html` produces a report directory containing:
+
+- `report.json` with the complete machine-readable evidence model
+- `report.md` with grouped findings and analyst-readable context
+- `report.sarif` for security tooling ingestion
+- `report.html`, an interactive HTML report for browsing findings, binary
+  evidence, dynamic observations, and cross-layer endpoint correlation
+- `frida-hooks.js` for authorized runtime capture
+
+The browser workbench can also load generated reports and batch reports from
+`workbench-data/reports/`.
 
 ## Evaluation Results
 
@@ -79,24 +135,24 @@ python eval/generate_abstract.py
 
 ## Corpus
 
-The evaluation corpus contains 5 real open-source
-benign iOS applications built from official source
-repositories, and 30 controlled synthetic malicious
-variants. SHA-256 hashes and build provenance are
-documented in eval/corpus/BUILD.md.
+The evaluation corpus contains 5 real open-source benign iOS applications built
+from official source repositories, and 30 controlled synthetic malicious
+variants. SHA-256 hashes and build provenance are documented in
+`eval/corpus/BUILD.md`.
 
-IPA files are not distributed in this repository.
-See eval/corpus/BUILD.md for build instructions.
-
+IPA files are not distributed in this repository. See `eval/corpus/BUILD.md`
+for build instructions.
 
 ## Project Structure
 
+```text
 ire_zero/        Core analysis library
 eval/            Corpus evaluation scripts and results
 docs/            Paper-writing documentation
 rules/           JSON detection rule pack
-tests/           Test suite (58 tests)
+tests/           Test suite
 webapp.py        Browser workbench server
+```
 
 ## License
 
