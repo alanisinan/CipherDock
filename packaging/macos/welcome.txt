@@ -1,0 +1,6 @@
+Welcome to the CipherDock @VERSION@ installer.
+
+This installer places CipherDock in /Applications/CipherDock and creates the
+command-line launchers cipherdock and cipherdock-workbench in /usr/local/bin.
+
+CipherDock is intended for authorized iOS IPA security assessment.

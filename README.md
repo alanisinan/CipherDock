@@ -62,6 +62,34 @@ capture support in the same environment:
 pip install -r requirements.txt
 ```
 
+## After macOS Installer
+
+For a simpler macOS install, download or open the repository DMG:
+
+```text
+dist/CipherDock-1.0.0.dmg
+```
+
+Double-click the DMG, then double-click `CipherDock-1.0.0.pkg` to start the
+macOS Installer wizard. The installer copies the project to
+`/Applications/CipherDock` and creates these commands:
+
+```bash
+cipherdock --help
+cipherdock analyze /path/to/app.ipa --sarif --html
+cipherdock-workbench
+```
+
+`cipherdock-workbench` starts the local browser workbench. Open the printed
+local URL in your browser, upload an authorized IPA, and review the generated
+static, dynamic, and HTML report views.
+
+Workbench data is stored in:
+
+```text
+~/Library/Application Support/CipherDock/workbench-data
+```
+
 ## Quick Start
 
 Analyze one authorized IPA and write JSON, Markdown, SARIF, HTML, and Frida hook

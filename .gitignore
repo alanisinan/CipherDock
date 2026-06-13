@@ -31,7 +31,8 @@ __pycache__/
 venv/
 .venv/
 *.egg-info/
-dist/
+dist/*
+!dist/*.dmg
 build/
 
 # macOS

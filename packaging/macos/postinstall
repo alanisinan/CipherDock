@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -u
+
+APP_DIR="/Applications/CipherDock"
+VENV_DIR="$APP_DIR/.venv"
+LOG_FILE="/var/log/cipherdock-installer.log"
+
+log() {
+  printf '%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*" >> "$LOG_FILE"
+}
+
+find_python() {
+  for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
+    if [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+PYTHON_BIN="$(find_python || true)"
+if [ -z "${PYTHON_BIN:-}" ]; then
+  log "Python 3 was not found. Install Python 3.11+ and run: python3 -m venv $VENV_DIR"
+  exit 0
+fi
+
+log "Using Python at $PYTHON_BIN"
+
+if "$PYTHON_BIN" -m venv "$VENV_DIR" >> "$LOG_FILE" 2>&1; then
+  "$VENV_DIR/bin/python" -m pip install --no-deps -e "$APP_DIR" >> "$LOG_FILE" 2>&1 || log "Editable install failed"
+else
+  log "Virtual environment creation failed"
+fi
+
+mkdir -p /usr/local/bin
+
+cat > /usr/local/bin/cipherdock <<'EOF'
+#!/usr/bin/env bash
+PYTHON_BIN="/Applications/CipherDock/.venv/bin/python"
+if [ ! -x "$PYTHON_BIN" ]; then
+  PYTHON_BIN="$(command -v python3)"
+fi
+export PYTHONPATH="/Applications/CipherDock${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PYTHON_BIN" -m ire_zero "$@"
+EOF
+chmod 0755 /usr/local/bin/cipherdock
+
+cat > /usr/local/bin/cipherdock-workbench <<'EOF'
+#!/usr/bin/env bash
+APP_DIR="/Applications/CipherDock"
+WORKSPACE="${HOME}/Library/Application Support/CipherDock/workbench-data"
+PYTHON_BIN="$APP_DIR/.venv/bin/python"
+if [ ! -x "$PYTHON_BIN" ]; then
+  PYTHON_BIN="$(command -v python3)"
+fi
+mkdir -p "$WORKSPACE"
+export PYTHONPATH="$APP_DIR${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PYTHON_BIN" "$APP_DIR/webapp.py" \
+  --html "$APP_DIR/cipherdock-workbench.html" \
+  --workspace "$WORKSPACE" \
+  "$@"
+EOF
+chmod 0755 /usr/local/bin/cipherdock-workbench
+
+log "CipherDock installation completed"
+exit 0
