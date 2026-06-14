@@ -78,11 +78,33 @@ macOS Installer wizard. The installer copies the project to
 cipherdock --help
 cipherdock analyze /path/to/app.ipa --sarif --html
 cipherdock-workbench
+cipherdock-workbench-stop
+cipherdock-workbench-restart
 ```
 
 `cipherdock-workbench` starts the local browser workbench. Open the printed
 local URL in your browser, upload an authorized IPA, and review the generated
 static, dynamic, and HTML report views.
+
+If the workbench is already running and you want a clean restart, stop it first:
+
+```bash
+cipherdock-workbench-restart
+```
+
+Or stop and start it manually:
+
+```bash
+cipherdock-workbench-stop
+cipherdock-workbench
+```
+
+To run a second workbench without stopping the existing listener, choose another
+port:
+
+```bash
+CIPHERDOCK_PORT=8766 cipherdock-workbench
+```
 
 Workbench data is stored in:
 

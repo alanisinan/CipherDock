@@ -5,6 +5,8 @@ After installation:
   cipherdock --help
   cipherdock analyze /path/to/app.ipa --sarif --html
   cipherdock-workbench
+  cipherdock-workbench-stop
+  cipherdock-workbench-restart
 
 Requirements:
 

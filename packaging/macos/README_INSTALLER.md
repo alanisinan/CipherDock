@@ -6,11 +6,26 @@ The installer copies CipherDock to /Applications/CipherDock and creates:
 
 - /usr/local/bin/cipherdock
 - /usr/local/bin/cipherdock-workbench
+- /usr/local/bin/cipherdock-workbench-stop
+- /usr/local/bin/cipherdock-workbench-restart
 
 Quick test after installation:
 
 ```bash
 cipherdock --help
+cipherdock-workbench
+```
+
+Restart the workbench cleanly:
+
+```bash
+cipherdock-workbench-restart
+```
+
+Or stop and start it manually:
+
+```bash
+cipherdock-workbench-stop
 cipherdock-workbench
 ```
 

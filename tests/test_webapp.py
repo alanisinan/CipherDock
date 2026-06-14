@@ -248,6 +248,76 @@ class LiveCaptureTests(unittest.TestCase):
         self.assertFalse(preflight["capture_ready"])
         self.assertIn("Install an iOS Simulator runtime", preflight["next_steps"][0])
 
+    def test_simulator_preflight_exposes_companion_install_action(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = WorkbenchState(root / "data", root / "workbench.html")
+            report_dir = state.reports / "sample"
+            report_dir.mkdir()
+            (report_dir / "report.json").write_text(
+                json.dumps({"info_plist": {"bundle_identifier": "com.example.app"}, "binary": {"platform": "IOS"}}),
+                encoding="utf-8",
+            )
+            (report_dir / "frida-hooks.js").write_text("// hooks", encoding="utf-8")
+            status = {
+                "simulator_status": {
+                    "available_devices": [{"id": "sim-1", "name": "iPhone 17 Pro", "state": "Booted"}],
+                    "booted_devices": [{"id": "sim-1", "name": "iPhone 17 Pro", "state": "Booted"}],
+                    "detail": "",
+                }
+            }
+            probe = {
+                "device_id": "sim-1",
+                "reachable": True,
+                "installed": False,
+                "running": False,
+                "detail": "Simulator responded; bundle missing.",
+            }
+            with mock.patch.object(state, "_find_runtime_tool", return_value="/tool/frida"):
+                with mock.patch.object(state, "runtime_status", return_value=status):
+                    with mock.patch.object(state, "_frida_simulator_target_probe", return_value=probe):
+                        preflight = state.runtime_preflight("sample", "spawn", "simulator")
+
+        self.assertFalse(preflight["capture_ready"])
+        self.assertEqual(preflight["required_action"], "install_simulator_companion")
+        self.assertIn("Device IPAs cannot run directly", preflight["next_steps"][0])
+        target_check = next(check for check in preflight["checks"] if check["id"] == "target-app")
+        self.assertEqual(target_check["state"], "fail")
+
+    def test_simulator_attach_does_not_request_running_process_before_install(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = WorkbenchState(root / "data", root / "workbench.html")
+            report_dir = state.reports / "sample"
+            report_dir.mkdir()
+            (report_dir / "report.json").write_text(
+                json.dumps({"info_plist": {"bundle_identifier": "com.example.app"}, "binary": {"platform": "IOS"}}),
+                encoding="utf-8",
+            )
+            (report_dir / "frida-hooks.js").write_text("// hooks", encoding="utf-8")
+            status = {
+                "simulator_status": {
+                    "available_devices": [{"id": "sim-1", "name": "iPhone 17 Pro", "state": "Booted"}],
+                    "booted_devices": [{"id": "sim-1", "name": "iPhone 17 Pro", "state": "Booted"}],
+                    "detail": "",
+                }
+            }
+            probe = {
+                "device_id": "sim-1",
+                "reachable": True,
+                "installed": False,
+                "running": False,
+                "detail": "Simulator responded; bundle missing.",
+            }
+            with mock.patch.object(state, "_find_runtime_tool", return_value="/tool/frida"):
+                with mock.patch.object(state, "runtime_status", return_value=status):
+                    with mock.patch.object(state, "_frida_simulator_target_probe", return_value=probe):
+                        preflight = state.runtime_preflight("sample", "attach", "simulator")
+
+        self.assertFalse(preflight["capture_ready"])
+        self.assertEqual(preflight["required_action"], "install_simulator_companion")
+        self.assertNotIn("running-process", {check["id"] for check in preflight["checks"]})
+
     def test_boot_simulator_prefers_previous_device_and_waits_until_ready(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

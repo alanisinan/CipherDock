@@ -3341,6 +3341,14 @@ function dynamicStatusText(dynamic) {
   return String((dynamic && dynamic.status) || 'not_captured').replaceAll('_', ' ');
 }
 
+function setDynamicStageStatus(label, warn) {
+  const stage = stages[3];
+  if (!stage) return;
+  stage.classList.remove('running', 'warn');
+  stage.textContent = label;
+  if (warn) stage.classList.add('warn');
+}
+
 function applyReport(report, reportId) {
   const filename = String(report.ipa_path || report.app_name || 'analyzed.ipa').split('/').pop();
   const dynamic = report.dynamic || { status: 'not_captured', events: [], limitations: [] };
@@ -4669,6 +4677,9 @@ function renderRuntimeTargets() {
   installCompanionButton.dataset.candidatePath = candidate ? candidate.path : '';
   installCompanionButton.disabled = runtimeEnvironment !== 'simulator' || targetActionInProgress || simulatorBootInProgress || !activeReportId;
   launchTargetButton.disabled = runtimeEnvironment !== 'simulator' || targetActionInProgress || !simulatorTarget || !simulatorTarget.installed || !simulatorTarget.available;
+  if (runtimePreflight && !runtimePreflight.capture_ready) {
+    renderRuntimePreflight();
+  }
 }
 
 async function bootSimulator(silent) {
@@ -4723,6 +4734,7 @@ async function runRuntimePreflight(silent) {
     '<div class="preflight-check"><i></i><strong>Preflight</strong><span>Checking ' +
     escapeHtml(runtimeEnvironment) + ' ' + escapeHtml(runtimeCaptureMode) + ' readiness for the selected bundle...</span></div>';
   document.getElementById('preflightNextStep').textContent = 'No app launch or instrumentation occurs during this check.';
+  startRuntimeLabel.textContent = 'Checking';
   startRuntimeButton.disabled = true;
   refreshPreflightButton.disabled = true;
   try {
@@ -4837,12 +4849,18 @@ function renderRuntimePreflight(errorMessage) {
   status.classList.remove('ready', 'live');
   startRuntimeLabel.textContent = runtimeCaptureMode === 'attach' ? 'Attach' : runtimeCaptureMode === 'gadget' ? 'Guided' : 'Start';
   if (!runtimePreflight) {
+    if (activeReportId && !errorMessage) {
+      startRuntimeLabel.textContent = 'Checking';
+    }
     checklist.innerHTML = '<div class="preflight-check' + (errorMessage ? ' fail' : '') + '"><i></i><strong>Status</strong><span>' +
       escapeHtml(errorMessage || (activeReportId ? 'Run preflight for this target.' : 'Awaiting target report.')) + '</span></div>';
     next.textContent = runtimeCaptureMode === 'gadget'
       ? 'Prepare and re-sign an authorized Gadget-patched IPA, then import the resulting trace.'
       : 'Preflight verifies the selected runtime target before any instrumentation begins.';
     startRuntimeButton.disabled = true;
+    if (activeReportPayload && !dynamicIsCaptured(activeReportPayload.dynamic)) {
+      setDynamicStageStatus('not captured', true);
+    }
     return;
   }
   checklist.innerHTML = (runtimePreflight.checks || []).map((check) =>
@@ -4855,18 +4873,46 @@ function renderRuntimePreflight(errorMessage) {
     status.classList.add('ready');
     detail.textContent = 'Target verified for ' + runtimeCaptureMode + ' capture. Starting will instrument the authorized ' +
       (runtimeEnvironment === 'simulator' ? 'Simulator target.' : 'device.');
+    setDynamicStageStatus(runtimeEnvironment === 'simulator' ? 'simulator ready' : 'device ready', true);
   } else if (runtimeCaptureMode === 'gadget') {
     status.textContent = 'Gadget setup';
     detail.textContent = 'Live Gadget capture requires a patched and re-signed authorized IPA.';
+    setDynamicStageStatus('gadget setup', true);
+  } else if (simulatorCompanionActionAvailable()) {
+    const candidate = simulatorCompanionCandidate();
+    status.textContent = 'Companion app required';
+    detail.textContent = candidate
+      ? 'A matching Simulator build was found. Install it before starting Frida capture.'
+      : 'Import a matching IOSSIMULATOR .app companion build before starting Frida capture.';
+    startRuntimeLabel.textContent = candidate ? 'Install Build' : 'Import .app';
+    setDynamicStageStatus('companion required', true);
   } else {
     status.textContent = 'Preflight blocked';
     detail.textContent = 'Resolve the failed checks before starting live capture.';
+    setDynamicStageStatus('preflight blocked', true);
   }
-  startRuntimeButton.disabled = !runtimePreflight.capture_ready || Boolean(runtimeSessionId);
+  startRuntimeButton.disabled = (
+    (!runtimePreflight.capture_ready && !simulatorCompanionActionAvailable()) ||
+    Boolean(runtimeSessionId) ||
+    targetActionInProgress
+  );
 }
 
 async function startRuntimeCapture() {
-  if (!activeReportId || !runtimePreflight || !runtimePreflight.capture_ready) return;
+  if (!activeReportId || !runtimePreflight) return;
+  if (!runtimePreflight.capture_ready) {
+    if (simulatorCompanionActionAvailable()) {
+      const candidate = simulatorCompanionCandidate();
+      if (candidate && candidate.path) {
+        await installDiscoveredCompanion(candidate.path);
+      } else {
+        companionAppInput.click();
+      }
+    } else {
+      showToast((runtimePreflight.next_steps || ['Resolve preflight before starting capture.']).join(' '));
+    }
+    return;
+  }
   startRuntimeButton.disabled = true;
   try {
     const response = await fetch('/api/runtime/sessions', {
@@ -4884,6 +4930,26 @@ async function startRuntimeCapture() {
     renderRuntimeAvailability();
     showToast(String(error.message || error));
   }
+}
+
+function simulatorCompanionCandidate() {
+  const simulatorTarget = runtimeTargets && (runtimeTargets.targets || []).find((target) => target.environment === 'simulator');
+  return simulatorTarget && !simulatorTarget.installed ? simulatorTarget.candidate : null;
+}
+
+function simulatorCompanionActionAvailable() {
+  if (!runtimePreflight || runtimeEnvironment !== 'simulator' || runtimeCaptureMode === 'gadget') return false;
+  if (runtimePreflight.capture_ready || runtimePreflight.required_action !== 'install_simulator_companion') return false;
+  const checks = runtimePreflight.checks || [];
+  const fridaChannel = checks.find((check) => check.id === 'frida-channel');
+  const targetApp = checks.find((check) => check.id === 'target-app');
+  return Boolean(
+    activeReportId &&
+    fridaChannel &&
+    fridaChannel.state === 'pass' &&
+    targetApp &&
+    targetApp.state === 'fail'
+  );
 }
 
 async function stopRuntimeCapture() {

@@ -378,7 +378,7 @@ class WorkbenchState:
                 },
             ]
         )
-        if capture_mode == "attach":
+        if capture_mode == "attach" and target_installed:
             checks.append(
                 {
                     "id": "running-process",
@@ -738,7 +738,7 @@ class WorkbenchState:
                 },
             ]
         )
-        if capture_mode == "attach":
+        if capture_mode == "attach" and target_installed:
             checks.append(
                 {
                     "id": "running-process",
@@ -750,6 +750,11 @@ class WorkbenchState:
         live_ready = bridge_ok and target_installed and script_path.exists() and (
             capture_mode == "spawn" or (capture_mode == "attach" and target_running)
         )
+        required_action = (
+            "install_simulator_companion"
+            if bridge_ok and not target_installed and capture_mode != "gadget"
+            else "none"
+        )
         if not simulator_status["available_devices"]:
             next_steps = ["Install an iOS Simulator runtime in Xcode Components, create a simulator device, and refresh preflight."]
         elif not booted:
@@ -758,8 +763,9 @@ class WorkbenchState:
             next_steps = ["Refresh after the booted Simulator is available to Frida."]
         elif not target_installed:
             next_steps = [
-                f"Build and run an authorized Simulator version with bundle identifier {bundle_identifier} from Xcode.",
-                "Refresh preflight; results will be labeled as Simulator companion-build evidence.",
+                "Device IPAs cannot run directly inside Xcode Simulator.",
+                f"Import or install a matching IOSSIMULATOR .app companion build with bundle identifier {bundle_identifier}.",
+                "Captured events will be labeled as Simulator companion-build evidence.",
             ]
         elif capture_mode == "attach" and not target_running:
             next_steps = ["Open the target app in Simulator, then refresh preflight before attaching."]
@@ -774,6 +780,7 @@ class WorkbenchState:
             "checks": checks,
             "device_probe": device_probe,
             "artifact_platform": artifact_platform,
+            "required_action": required_action,
             "next_steps": next_steps,
         }
 

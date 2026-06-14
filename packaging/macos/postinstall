@@ -64,6 +64,7 @@ fi
 mkdir -p "$WORKSPACE"
 if command -v lsof >/dev/null 2>&1 && lsof -tiTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   echo "CipherDock Workbench appears to already be running at http://127.0.0.1:${PORT}/cipherdock-workbench.html"
+  echo "Run cipherdock-workbench-restart to restart it, or cipherdock-workbench-stop to stop it."
   echo "Use CIPHERDOCK_PORT=8766 cipherdock-workbench to start another instance."
   exit 0
 fi
@@ -79,6 +80,66 @@ exec "$PYTHON_BIN" "$APP_DIR/webapp.py" \
   "$@"
 EOF
 chmod 0755 /usr/local/bin/cipherdock-workbench
+
+cat > /usr/local/bin/cipherdock-workbench-stop <<'EOF'
+#!/usr/bin/env bash
+set -u
+
+PORT="${CIPHERDOCK_PORT:-8765}"
+AGENT_PLIST="${HOME}/Library/LaunchAgents/com.cipherdock.workbench.plist"
+AGENT_LABEL="gui/$(id -u)/com.cipherdock.workbench"
+
+stopped=0
+
+if command -v launchctl >/dev/null 2>&1 && [ -f "$AGENT_PLIST" ]; then
+  if launchctl print "$AGENT_LABEL" >/dev/null 2>&1; then
+    launchctl bootout "gui/$(id -u)" "$AGENT_PLIST" >/dev/null 2>&1 || true
+    echo "Stopped CipherDock Workbench LaunchAgent."
+    stopped=1
+  fi
+fi
+
+if ! command -v lsof >/dev/null 2>&1; then
+  if [ "$stopped" -eq 0 ]; then
+    echo "lsof is unavailable; no port listener could be checked."
+  fi
+  exit 0
+fi
+
+pids="$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+if [ -z "$pids" ]; then
+  if [ "$stopped" -eq 0 ]; then
+    echo "No CipherDock Workbench listener found on port ${PORT}."
+  fi
+  exit 0
+fi
+
+echo "$pids" | while IFS= read -r pid; do
+  [ -z "$pid" ] && continue
+  kill "$pid" 2>/dev/null || true
+done
+
+sleep 1
+remaining="$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+if [ -n "$remaining" ]; then
+  echo "$remaining" | while IFS= read -r pid; do
+    [ -z "$pid" ] && continue
+    kill -9 "$pid" 2>/dev/null || true
+  done
+fi
+
+echo "Stopped CipherDock Workbench on port ${PORT}."
+EOF
+chmod 0755 /usr/local/bin/cipherdock-workbench-stop
+
+cat > /usr/local/bin/cipherdock-workbench-restart <<'EOF'
+#!/usr/bin/env bash
+set -e
+
+cipherdock-workbench-stop
+exec cipherdock-workbench "$@"
+EOF
+chmod 0755 /usr/local/bin/cipherdock-workbench-restart
 
 log "CipherDock installation completed"
 exit 0
