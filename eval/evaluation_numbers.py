@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract reproducible paper statistics from evaluation and runtime artifacts."""
+"""Extract reproducible evaluation statistics from evaluation and runtime artifacts."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Export the single source of truth for iRE-Zero paper statistics.")
+    parser = argparse.ArgumentParser(description="Export the single source of truth for iRE-Zero evaluation statistics.")
     parser.add_argument("results_csv", type=Path, nargs="?", default=Path("eval/results.csv"))
     parser.add_argument("metrics_csv", type=Path, nargs="?", default=Path("eval/metrics.csv"))
     parser.add_argument("--vt-results", type=Path, default=Path("eval/vt_results.csv"))
@@ -23,8 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runtime-bindings", type=Path, default=Path("workbench-data/runtime-target-bindings.json"))
     parser.add_argument("--threshold-curve", type=Path, default=Path("eval/threshold_curve.csv"))
     parser.add_argument("--category-delta", type=Path, default=Path("eval/category_delta.csv"))
-    parser.add_argument("--json-output", type=Path, default=Path("eval/paper_numbers.json"))
-    parser.add_argument("--markdown-output", type=Path, default=Path("eval/paper_numbers.md"))
+    parser.add_argument("--json-output", type=Path, default=Path("eval/evaluation_numbers.json"))
+    parser.add_argument("--markdown-output", type=Path, default=Path("eval/evaluation_numbers.md"))
     return parser
 
 
@@ -33,7 +33,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         results = read_results(args.results_csv.resolve())
         metrics = read_csv(args.metrics_csv.resolve())
-        numbers = compute_paper_numbers(
+        numbers = compute_evaluation_numbers(
             results,
             metrics,
             args.vt_results.resolve(),
@@ -44,7 +44,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             args.category_delta.resolve(),
         )
     except (OSError, ValueError) as exc:
-        print(f"Unable to extract paper numbers: {exc}", file=sys.stderr)
+        print(f"Unable to extract evaluation numbers: {exc}", file=sys.stderr)
         return 2
     json_output = args.json_output.resolve()
     markdown_output = args.markdown_output.resolve()
@@ -53,8 +53,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     json_output.write_text(json.dumps(numbers, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     markdown_output.write_text(render_markdown(numbers), encoding="utf-8")
     print(json.dumps(numbers, indent=2, sort_keys=True))
-    print(f"[paper] {json_output}")
-    print(f"[paper] {markdown_output}")
+    print(f"[evaluation] {json_output}")
+    print(f"[evaluation] {markdown_output}")
     return 0
 
 
@@ -86,7 +86,7 @@ def read_csv(path: Path) -> List[Dict[str, str]]:
         return [dict(row) for row in csv.DictReader(handle)]
 
 
-def compute_paper_numbers(
+def compute_evaluation_numbers(
     results: List[Dict[str, Any]],
     metrics: List[Dict[str, str]],
     vt_results_path: Path,
@@ -327,7 +327,7 @@ def _simulator_target(path: Optional[Path]) -> Optional[str]:
 
 
 def render_markdown(numbers: Dict[str, Any]) -> str:
-    lines = ["# Paper Numbers", "", "Generated from `results.csv` and `metrics.csv`. Do not transcribe statistics from ad hoc runs.", ""]
+    lines = ["# Evaluation Numbers", "", "Generated from `results.csv` and `metrics.csv`. Do not transcribe statistics from ad hoc runs.", ""]
     for key, value in numbers.items():
         lines.append(f"- `{key}`: `{value}`")
     lines.append("")

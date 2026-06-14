@@ -1,6 +1,6 @@
-# Paper Ready Numbers
+# Evaluation Numbers
 
-These statements are generated for paper drafting from the current evaluation artifacts. The authoritative machine-readable source is `eval/paper_numbers.json`; rows and category calculations originate in `eval/results.csv` and `eval/metrics.csv`.
+These statements are generated for evaluation review from the current evaluation artifacts. The authoritative machine-readable source is `eval/evaluation_numbers.json`; rows and category calculations originate in `eval/results.csv` and `eval/metrics.csv`.
 
 ## Corpus
 
@@ -38,7 +38,7 @@ The evaluation holds out [30%] of labeled samples, producing a held-out set of [
 
 At the calibration-selected threshold of [50], CipherDock records [9] true positives, [1] false positive, [1] true negative, and [0] false negatives; precision is [0.9000], recall is [1.0000], and F1 is [0.9474].
 
-At threshold [50], the bootstrap 95 percent F1 confidence interval is [[0.8235, 1.0000]], summarized in `paper_numbers.json` as [0.95 +/- 0.09].
+At threshold [50], the bootstrap 95 percent F1 confidence interval is [[0.8235, 1.0000]], summarized in `evaluation_numbers.json` as [0.95 +/- 0.09].
 
 At threshold [70], CipherDock records [6] true positives, [0] false positives, [2] true negatives, and [3] false negatives; precision is [1.0000], recall is [0.6667], F1 is [0.8000], and the 95 percent confidence interval is [[0.5000, 1.0000]].
 

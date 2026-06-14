@@ -43,7 +43,7 @@ There are no trained SHAP weights and no voting ensemble in the present implemen
 
 ## Evaluation Statistics And Reproducibility
 
-`eval/run_all.py` writes `threshold_curve.csv` by reusing the same stable held-out split used in reported metrics and calculating precision, recall, and F1 at thresholds 10 through 95 in steps of 5. It writes `category_delta.csv` by applying a two-sided asymptotic Mann-Whitney U test with tie correction to benign and controlled-malicious category-count distributions. `eval/verify_corpus.py` independently checks IPA SHA-256 values against the label manifest and, for real benign controls, the SHA values recorded in `BUILD.md`. `eval/generate_abstract.py` fills an abstract solely from `paper_numbers.json`.
+`eval/run_all.py` writes `threshold_curve.csv` by reusing the same stable held-out split used in reported metrics and calculating precision, recall, and F1 at thresholds 10 through 95 in steps of 5. It writes `category_delta.csv` by applying a two-sided asymptotic Mann-Whitney U test with tie correction to benign and controlled-malicious category-count distributions. `eval/verify_corpus.py` independently checks IPA SHA-256 values against the label manifest and, for real benign controls, the SHA values recorded in `BUILD.md`. `eval/generate_summary.py` fills a concise summary solely from `evaluation_numbers.json`.
 
 ## Mach-O Evidence
 
@@ -54,4 +54,4 @@ The built-in parser accepts thin and fat Mach-O containers, preferring an ARM64 
 - `ire_zero/binary.py`, `ire_zero/macho.py`, `ire_zero/heuristics.py`, `ire_zero/runtime.py`, `ire_zero/reporting.py`, `ire_zero/semantics.py`
 - `eval/reports/mastodon-ios-f5abc1bed120/mastodon-ios/report.json`
 - `workbench-data/reports/org.joinmastodon.app_2026.03_und3fined-26/report.json`
-- `eval/threshold_curve.csv`, `eval/category_delta.csv`, `eval/paper_numbers.json`
+- `eval/threshold_curve.csv`, `eval/category_delta.csv`, `eval/evaluation_numbers.json`

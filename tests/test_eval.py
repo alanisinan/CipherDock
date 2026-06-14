@@ -9,9 +9,9 @@ import zipfile
 from pathlib import Path
 
 from eval.common import load_labels, sample_candidates, upsert_label_rows
-from eval.generate_abstract import generate_abstract
+from eval.generate_summary import generate_summary
 from eval.metrics import ScoredExample, bootstrap_f1, compute_metrics, main as metrics_main, read_labeled_scores, split_examples
-from eval.paper_numbers import _dynamic_numbers
+from eval.evaluation_numbers import _dynamic_numbers
 from eval.run_all import main as run_all_main, mann_whitney_u
 from eval.run_corpus import discover_ipas, main as run_corpus_main
 from eval.synthetic_builder import main as synthetic_builder_main
@@ -93,8 +93,8 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(statistic, 0.0)
         self.assertLess(p_value, 0.05)
 
-    def test_abstract_is_filled_from_paper_numbers(self) -> None:
-        abstract = generate_abstract(
+    def test_summary_is_filled_from_evaluation_numbers(self) -> None:
+        summary = generate_summary(
             {
                 "corpus_total": 35,
                 "corpus_benign_real": 5,
@@ -114,9 +114,9 @@ class EvaluationTests(unittest.TestCase):
             }
         )
 
-        self.assertIn("controlled corpus of 35 IPAs", abstract)
-        self.assertIn("F1 0.9474", abstract)
-        self.assertIn("DOMAIN_MATCH", abstract)
+        self.assertIn("controlled corpus of 35 IPAs", summary)
+        self.assertIn("F1 0.9474", summary)
+        self.assertIn("DOMAIN_MATCH", summary)
 
     def test_synthetic_builder_injects_detectable_static_behaviors_and_labels(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -291,7 +291,7 @@ class EvaluationTests(unittest.TestCase):
                 1,
             )
 
-    def test_run_all_writes_paper_outputs(self) -> None:
+    def test_run_all_writes_evaluation_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             corpus = root / "corpus"
@@ -330,7 +330,7 @@ class EvaluationTests(unittest.TestCase):
             threshold_curve = root / "threshold_curve.csv"
             category_delta = root / "category_delta.csv"
             table = root / "RESULTS.md"
-            paper_json = root / "paper_numbers.json"
+            evaluation_json = root / "evaluation_numbers.json"
             status = run_all_main(
                 [
                     "--corpus-dir",
@@ -347,12 +347,12 @@ class EvaluationTests(unittest.TestCase):
                     str(category_delta),
                     "--reports-dir",
                     str(root / "reports"),
-                    "--paper-table",
+                    "--evaluation-table",
                     str(table),
-                    "--paper-json",
-                    str(paper_json),
-                    "--paper-numbers-md",
-                    str(root / "paper_numbers.md"),
+                    "--evaluation-json",
+                    str(evaluation_json),
+                    "--evaluation-numbers-md",
+                    str(root / "evaluation_numbers.md"),
                     "--vt-results",
                     str(root / "missing-vt.csv"),
                     "--dynamic-report",
@@ -361,7 +361,7 @@ class EvaluationTests(unittest.TestCase):
                     str(root / "missing-runtime-bindings.json"),
                 ]
             )
-            numbers = json.loads(paper_json.read_text(encoding="utf-8"))
+            numbers = json.loads(evaluation_json.read_text(encoding="utf-8"))
 
             self.assertEqual(status, 0)
             self.assertEqual(numbers["corpus_total"], 2)

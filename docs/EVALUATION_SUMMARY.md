@@ -66,4 +66,4 @@ Running `python3 eval/verify_corpus.py` verifies **35/35** analyzed IPA hashes a
 
 ## Source Of Truth
 
-All performance and capture numbers in this summary come from `eval/paper_numbers.json`, `eval/results.csv`, `eval/metrics.csv`, `eval/threshold_curve.csv`, and `eval/category_delta.csv`. Build status and SHA-256 values come from `eval/corpus/BUILD.md` and `eval/corpus/labels.csv`.
+All performance and capture numbers in this summary come from `eval/evaluation_numbers.json`, `eval/results.csv`, `eval/metrics.csv`, `eval/threshold_curve.csv`, and `eval/category_delta.csv`. Build status and SHA-256 values come from `eval/corpus/BUILD.md` and `eval/corpus/labels.csv`.

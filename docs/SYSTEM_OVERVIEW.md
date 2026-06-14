@@ -2,7 +2,7 @@
 
 ## Purpose
 
-CipherDock is a local iOS security-analysis workbench backed by the `iRE-Zero` Python 3 CLI. It accepts authorized IPA artifacts, extracts static evidence from the application bundle and Mach-O executable, assigns a deterministic risk score, prepares runtime probes, ingests authorized Frida traces, and exposes the resulting reports in a browser workbench. The evaluation utilities run the same static CLI against a labeled corpus and produce paper-facing CSV and Markdown artifacts.
+CipherDock is a local iOS security-analysis workbench backed by the `iRE-Zero` Python 3 CLI. It accepts authorized IPA artifacts, extracts static evidence from the application bundle and Mach-O executable, assigns a deterministic risk score, prepares runtime probes, ingests authorized Frida traces, and exposes the resulting reports in a browser workbench. The evaluation utilities run the same static CLI against a labeled corpus and produce evaluation CSV and Markdown artifacts.
 
 ## Pipeline Stages
 
@@ -10,13 +10,13 @@ CipherDock is a local iOS security-analysis workbench backed by the `iRE-Zero` P
 2. **Metadata and signing extraction.** Python `plistlib` extracts `Info.plist` fields, while `codesign -d --entitlements :-` and `codesign -dvv` are invoked when available to recover entitlements and signing metadata.
 3. **Native binary and string analysis.** The built-in Mach-O parser reads load commands and sections and computes section entropy. Optional local tool invocations are `otool -L`, `otool -tvV`, `nm -m`, and `class-dump`. Printable-string scanning and the JSON rule pack identify URLs, IP addresses, secret-like values, and suspicious vocabulary. Optional Ghidra support runs `analyzeHeadless` when the user supplies its path.
 4. **Heuristics, evidence, and reporting.** `ire_zero.heuristics` maps evidence to deterministic findings and score buckets; `ire_zero.runtime` constructs runtime probes; `ire_zero.reporting` writes report artifacts and Frida hooks; `ire_zero.semantics` creates deterministic analyst-note summaries.
-5. **Runtime and evaluation layer.** The workbench can execute generated Frida hooks against an authorized Simulator or device target and merge JSONL events into a report. Cross-layer correlation distinguishes `CONFIRMED`, `DOMAIN_MATCH`, and `DYNAMIC_ONLY` events. The `eval` package builds synthetic controls, runs corpus scoring, calculates held-out bootstrap metrics and threshold sensitivity, tests category deltas, verifies corpus hashes, and emits paper-number artifacts.
+5. **Runtime and evaluation layer.** The workbench can execute generated Frida hooks against an authorized Simulator or device target and merge JSONL events into a report. Cross-layer correlation distinguishes `CONFIRMED`, `DOMAIN_MATCH`, and `DYNAMIC_ONLY` events. The `eval` package builds synthetic controls, runs corpus scoring, calculates held-out bootstrap metrics and threshold sensitivity, tests category deltas, verifies corpus hashes, and emits evaluation-number artifacts.
 
 ## Inputs And Outputs
 
 CipherDock accepts one IPA file or a directory of IPA files. It can additionally consume a JSON or JSONL runtime trace, an optional rules file, and an optional Ghidra `analyzeHeadless` path.
 
-For each IPA, the CLI can produce `report.json`, `report.md`, `report.html`, `report.sarif`, `frida-hooks.js`, evidence exports, a risk score, a runtime probe plan, and a `cross_layer` dynamic/static comparison section when runtime evidence is present. Batch evaluation produces `results.csv`, `metrics.csv`, `threshold_curve.csv`, `category_delta.csv`, `RESULTS.md`, `paper_numbers.json`, and `paper_numbers.md`; `generate_abstract.py` renders an abstract from the paper numbers.
+For each IPA, the CLI can produce `report.json`, `report.md`, `report.html`, `report.sarif`, `frida-hooks.js`, evidence exports, a risk score, a runtime probe plan, and a `cross_layer` dynamic/static comparison section when runtime evidence is present. Batch evaluation produces `results.csv`, `metrics.csv`, `threshold_curve.csv`, `category_delta.csv`, `RESULTS.md`, `evaluation_numbers.json`, and `evaluation_numbers.md`; `generate_summary.py` renders a concise summary from the evaluation numbers.
 
 ## Risk Dimensions In The Mastodon Run
 
@@ -38,7 +38,7 @@ The dynamic evidence record is an authorized Frida `17.9.11` capture from a Mast
 
 ## Sources
 
-- `eval/paper_numbers.json`
+- `eval/evaluation_numbers.json`
 - `eval/results.csv`
 - `eval/threshold_curve.csv`
 - `eval/category_delta.csv`

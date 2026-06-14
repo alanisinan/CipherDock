@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a factual paper abstract from the current paper-number artifact."""
+"""Generate a factual evaluation summary from the current evaluation-number artifact."""
 
 from __future__ import annotations
 
@@ -11,25 +11,25 @@ from typing import Any, Dict, Optional, Sequence
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Print a paper-ready abstract using eval/paper_numbers.json.")
-    parser.add_argument("--paper-numbers", type=Path, default=Path("eval/paper_numbers.json"))
+    parser = argparse.ArgumentParser(description="Print an evaluation summary using eval/evaluation_numbers.json.")
+    parser.add_argument("--evaluation-numbers", type=Path, default=Path("eval/evaluation_numbers.json"))
     return parser
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        numbers = json.loads(args.paper_numbers.resolve().read_text(encoding="utf-8"))
-        abstract = generate_abstract(numbers)
+        numbers = json.loads(args.evaluation_numbers.resolve().read_text(encoding="utf-8"))
+        summary = generate_summary(numbers)
     except (OSError, ValueError, KeyError) as exc:
         print(f"Unable to generate abstract: {exc}", file=sys.stderr)
         return 2
-    print(abstract)
+    print(summary)
     return 0
 
 
-def generate_abstract(numbers: Dict[str, Any]) -> str:
-    """Render a concise abstract with statistics provided by the evaluation pipeline."""
+def generate_summary(numbers: Dict[str, Any]) -> str:
+    """Render a concise summary with statistics provided by the evaluation pipeline."""
     required = (
         "corpus_total",
         "corpus_benign_real",
@@ -49,9 +49,9 @@ def generate_abstract(numbers: Dict[str, Any]) -> str:
     )
     missing = [key for key in required if key not in numbers]
     if missing:
-        raise KeyError(f"paper_numbers.json missing: {', '.join(missing)}")
+        raise KeyError(f"evaluation_numbers.json missing: {', '.join(missing)}")
     return (
-        "Abstract\n\n"
+        "Evaluation Summary\n\n"
         "Static and dynamic assessment of iOS application packages remains fragmented, particularly when "
         "researchers cannot rely on a jailbroken physical device. CipherDock is a local analysis workbench "
         "that combines typed IPA static analysis, deterministic evidence-weighted scoring, runtime probe "

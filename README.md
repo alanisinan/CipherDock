@@ -16,7 +16,7 @@ evidence, classifying each captured event as CONFIRMED, DOMAIN_MATCH, or
 DYNAMIC_ONLY against static URL evidence.
 
 CipherDock is designed for authorized security research, internal app review,
-and reproducible paper evaluation workflows.
+and reproducible evaluation workflows.
 
 ## Workbench Screenshots
 
@@ -129,10 +129,10 @@ Verify corpus integrity:
 python eval/verify_corpus.py
 ```
 
-Generate a paper abstract from the current evaluation numbers:
+Generate an evaluation summary from the current evaluation numbers:
 
 ```bash
-python eval/generate_abstract.py
+python eval/generate_summary.py
 ```
 
 ## Sample Output
@@ -176,7 +176,7 @@ for build instructions.
 ```text
 ire_zero/        Core analysis library
 eval/            Corpus evaluation scripts and results
-docs/            Paper-writing documentation
+docs/            Evaluation documentation
 rules/           JSON detection rule pack
 tests/           Test suite
 webapp.py        Browser workbench server
