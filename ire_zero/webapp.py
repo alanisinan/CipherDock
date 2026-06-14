@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import cgi
+import errno
 import json
 import mimetypes
 import os
@@ -1597,11 +1598,24 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         return
 
 
-def serve(host: str, port: int, workspace: Path, html_path: Path) -> None:
+def serve(host: str, port: int, workspace: Path, html_path: Path, port_attempts: int = 10) -> None:
     state = WorkbenchState(workspace, html_path)
-    server = ThreadingHTTPServer((host, port), WorkbenchHandler)
+    server = None
+    selected_port = port
+    for offset in range(max(1, port_attempts)):
+        candidate_port = port + offset
+        try:
+            server = ThreadingHTTPServer((host, candidate_port), WorkbenchHandler)
+            selected_port = candidate_port
+            break
+        except OSError as exc:
+            if exc.errno != errno.EADDRINUSE or offset == max(1, port_attempts) - 1:
+                raise
+            print(f"Port {candidate_port} is already in use; trying {candidate_port + 1}.", flush=True)
+    if server is None:
+        raise RuntimeError("Could not start workbench server")
     server.state = state  # type: ignore[attr-defined]
-    print(f"iRE-Zero workbench listening at http://{host}:{port}/cipherdock-workbench.html", flush=True)
+    print(f"iRE-Zero workbench listening at http://{host}:{selected_port}/cipherdock-workbench.html", flush=True)
     print(f"Reports: {state.reports}", flush=True)
     try:
         server.serve_forever()
@@ -1615,10 +1629,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(prog="ire-zero-workbench")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--port-attempts", type=int, default=10, help="Try additional ports if the requested port is busy")
     parser.add_argument("--workspace", type=Path, default=Path("workbench-data"))
     parser.add_argument("--html", type=Path, default=Path("cipherdock-workbench.html"))
     args = parser.parse_args(argv)
-    serve(args.host, args.port, args.workspace, args.html.resolve())
+    serve(args.host, args.port, args.workspace, args.html.resolve(), args.port_attempts)
     return 0
 
 

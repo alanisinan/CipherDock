@@ -56,17 +56,24 @@ cat > /usr/local/bin/cipherdock-workbench <<'EOF'
 #!/usr/bin/env bash
 APP_DIR="/Applications/CipherDock"
 WORKSPACE="${HOME}/Library/Application Support/CipherDock/workbench-data"
+PORT="${CIPHERDOCK_PORT:-8765}"
 PYTHON_BIN="$APP_DIR/.venv/bin/python"
 if [ ! -x "$PYTHON_BIN" ]; then
   PYTHON_BIN="$(command -v python3)"
 fi
 mkdir -p "$WORKSPACE"
+if command -v lsof >/dev/null 2>&1 && lsof -tiTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+  echo "CipherDock Workbench appears to already be running at http://127.0.0.1:${PORT}/cipherdock-workbench.html"
+  echo "Use CIPHERDOCK_PORT=8766 cipherdock-workbench to start another instance."
+  exit 0
+fi
 export PATH="$APP_DIR/.venv/bin:$PATH"
 export PYTHONPATH="$APP_DIR${PYTHONPATH:+:$PYTHONPATH}"
 export IRE_ZERO_FRIDA_PATH="${IRE_ZERO_FRIDA_PATH:-$APP_DIR/.venv/bin/frida}"
 export IRE_ZERO_FRIDA_LS_DEVICES_PATH="${IRE_ZERO_FRIDA_LS_DEVICES_PATH:-$APP_DIR/.venv/bin/frida-ls-devices}"
 export IRE_ZERO_OBJECTION_PATH="${IRE_ZERO_OBJECTION_PATH:-$APP_DIR/.venv/bin/objection}"
 exec "$PYTHON_BIN" "$APP_DIR/webapp.py" \
+  --port "$PORT" \
   --html "$APP_DIR/cipherdock-workbench.html" \
   --workspace "$WORKSPACE" \
   "$@"
