@@ -29,6 +29,7 @@ log "Using Python at $PYTHON_BIN"
 
 if "$PYTHON_BIN" -m venv "$VENV_DIR" >> "$LOG_FILE" 2>&1; then
   "$VENV_DIR/bin/python" -m pip install --no-deps -e "$APP_DIR" >> "$LOG_FILE" 2>&1 || log "Editable install failed"
+  "$VENV_DIR/bin/python" -m pip install -r "$APP_DIR/requirements.txt" >> "$LOG_FILE" 2>&1 || log "Optional dynamic tools install failed"
 else
   log "Virtual environment creation failed"
 fi
@@ -37,11 +38,16 @@ mkdir -p /usr/local/bin
 
 cat > /usr/local/bin/cipherdock <<'EOF'
 #!/usr/bin/env bash
-PYTHON_BIN="/Applications/CipherDock/.venv/bin/python"
+APP_DIR="/Applications/CipherDock"
+PYTHON_BIN="$APP_DIR/.venv/bin/python"
 if [ ! -x "$PYTHON_BIN" ]; then
   PYTHON_BIN="$(command -v python3)"
 fi
-export PYTHONPATH="/Applications/CipherDock${PYTHONPATH:+:$PYTHONPATH}"
+export PATH="$APP_DIR/.venv/bin:$PATH"
+export PYTHONPATH="$APP_DIR${PYTHONPATH:+:$PYTHONPATH}"
+export IRE_ZERO_FRIDA_PATH="${IRE_ZERO_FRIDA_PATH:-$APP_DIR/.venv/bin/frida}"
+export IRE_ZERO_FRIDA_LS_DEVICES_PATH="${IRE_ZERO_FRIDA_LS_DEVICES_PATH:-$APP_DIR/.venv/bin/frida-ls-devices}"
+export IRE_ZERO_OBJECTION_PATH="${IRE_ZERO_OBJECTION_PATH:-$APP_DIR/.venv/bin/objection}"
 exec "$PYTHON_BIN" -m ire_zero "$@"
 EOF
 chmod 0755 /usr/local/bin/cipherdock
@@ -55,7 +61,11 @@ if [ ! -x "$PYTHON_BIN" ]; then
   PYTHON_BIN="$(command -v python3)"
 fi
 mkdir -p "$WORKSPACE"
+export PATH="$APP_DIR/.venv/bin:$PATH"
 export PYTHONPATH="$APP_DIR${PYTHONPATH:+:$PYTHONPATH}"
+export IRE_ZERO_FRIDA_PATH="${IRE_ZERO_FRIDA_PATH:-$APP_DIR/.venv/bin/frida}"
+export IRE_ZERO_FRIDA_LS_DEVICES_PATH="${IRE_ZERO_FRIDA_LS_DEVICES_PATH:-$APP_DIR/.venv/bin/frida-ls-devices}"
+export IRE_ZERO_OBJECTION_PATH="${IRE_ZERO_OBJECTION_PATH:-$APP_DIR/.venv/bin/objection}"
 exec "$PYTHON_BIN" "$APP_DIR/webapp.py" \
   --html "$APP_DIR/cipherdock-workbench.html" \
   --workspace "$WORKSPACE" \
