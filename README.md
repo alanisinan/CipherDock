@@ -41,8 +41,8 @@ Dynamic evidence view showing the captured `NSURLSession` endpoint and its
 - macOS for complete iOS IPA analysis
 - Xcode Command Line Tools
 - Apple command-line tools used by the analyzer: `codesign`, `otool`, and `nm`
-- Frida 17.9+ for optional dynamic capture
-- Objection for optional device-assisted workflows
+- Frida 17.9+ for optional dynamic capture; the macOS installer installs the local client tools automatically
+- Objection for optional device-assisted workflows; the macOS installer installs it automatically
 - Ghidra `analyzeHeadless` for optional symbol enrichment
 
 Linux can run the pure-Python parsing and report-generation paths, but macOS is
@@ -72,7 +72,8 @@ dist/CipherDock-1.0.0.dmg
 
 Double-click the DMG, then double-click `CipherDock-1.0.0.pkg` to start the
 macOS Installer wizard. The installer copies the project to
-`/Applications/CipherDock` and creates these commands:
+`/Applications/CipherDock`, creates a managed Python virtual environment,
+installs the Frida/Objection client tools, and creates these commands:
 
 ```bash
 cipherdock --help

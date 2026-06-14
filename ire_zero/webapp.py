@@ -515,7 +515,7 @@ class WorkbenchState:
                     "installed": bool(simulator_probe.get("installed")),
                     "running": bool(simulator_probe.get("running")),
                     "state": "ready" if simulator_probe.get("installed") else "needs_companion",
-                    "boundary": "exact Simulator artifact" if simulator_exact else "companion-build evidence",
+                    "boundary": "exact Simulator artifact" if simulator_exact else "Simulator companion evidence",
                     "detail": str(simulator_probe.get("detail", "")),
                     "candidate": companion_candidates[0] if companion_candidates else None,
                 },
@@ -714,6 +714,9 @@ class WorkbenchState:
         bridge_ok = bool(device_probe.get("reachable"))
         target_installed = bool(device_probe.get("installed"))
         target_running = bool(device_probe.get("running"))
+        missing_simulator_target_state = (
+            "guide" if artifact_platform != "IOSSIMULATOR" and bridge_ok and not target_installed else "fail"
+        )
         checks.extend(
             [
                 {
@@ -725,14 +728,18 @@ class WorkbenchState:
                 {
                     "id": "target-app",
                     "label": "Target app",
-                    "state": "pass" if target_installed else ("blocked" if not bridge_ok else "fail"),
+                    "state": "pass" if target_installed else ("blocked" if not bridge_ok else missing_simulator_target_state),
                     "detail": (
                         f"{bundle_identifier} is installed in the Simulator"
                         if target_installed
                         else (
                             "Awaiting a working Simulator channel before verifying the installed bundle."
                             if not bridge_ok
-                            else f"{bundle_identifier} was not found in the booted Simulator."
+                            else (
+                                f"{bundle_identifier} is a device IPA target; import a matching Simulator .app or use USB/Gadget capture."
+                                if artifact_platform != "IOSSIMULATOR"
+                                else f"{bundle_identifier} was not found in the booted Simulator."
+                            )
                         )
                     ),
                 },
@@ -763,9 +770,9 @@ class WorkbenchState:
             next_steps = ["Refresh after the booted Simulator is available to Frida."]
         elif not target_installed:
             next_steps = [
-                "Device IPAs cannot run directly inside Xcode Simulator.",
-                f"Import or install a matching IOSSIMULATOR .app companion build with bundle identifier {bundle_identifier}.",
-                "Captured events will be labeled as Simulator companion-build evidence.",
+                "This uploaded IPA is a device build and cannot run directly inside Xcode Simulator.",
+                "For exact dynamic capture, use an authorized USB iPhone target or a Gadget-patched authorized IPA.",
+                f"For Simulator capture, import or install a matching IOSSIMULATOR .app with bundle identifier {bundle_identifier}.",
             ]
         elif capture_mode == "attach" and not target_running:
             next_steps = ["Open the target app in Simulator, then refresh preflight before attaching."]

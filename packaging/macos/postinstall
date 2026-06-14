@@ -29,7 +29,21 @@ log "Using Python at $PYTHON_BIN"
 
 if "$PYTHON_BIN" -m venv "$VENV_DIR" >> "$LOG_FILE" 2>&1; then
   "$VENV_DIR/bin/python" -m pip install --no-deps -e "$APP_DIR" >> "$LOG_FILE" 2>&1 || log "Editable install failed"
-  "$VENV_DIR/bin/python" -m pip install -r "$APP_DIR/requirements.txt" >> "$LOG_FILE" 2>&1 || log "Optional dynamic tools install failed"
+  WHEEL_DIR="$APP_DIR/packaging/macos/wheels"
+  if [ -d "$WHEEL_DIR" ] && ls "$WHEEL_DIR"/*.whl >/dev/null 2>&1; then
+    "$VENV_DIR/bin/python" -m pip install --no-index --find-links "$WHEEL_DIR" -r "$APP_DIR/requirements.txt" >> "$LOG_FILE" 2>&1 || \
+      "$VENV_DIR/bin/python" -m pip install -r "$APP_DIR/requirements.txt" >> "$LOG_FILE" 2>&1 || \
+      log "Dynamic tools install failed"
+  else
+    "$VENV_DIR/bin/python" -m pip install -r "$APP_DIR/requirements.txt" >> "$LOG_FILE" 2>&1 || log "Dynamic tools install failed"
+  fi
+  for tool in frida frida-ls-devices objection; do
+    if [ -x "$VENV_DIR/bin/$tool" ]; then
+      log "Verified dynamic tool: $tool"
+    else
+      log "Missing dynamic tool after install: $tool"
+    fi
+  done
 else
   log "Virtual environment creation failed"
 fi

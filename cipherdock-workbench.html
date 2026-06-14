@@ -4612,7 +4612,7 @@ function renderRuntimeAvailability() {
       : 'Connect an authorized USB iOS runtime with matching Frida Server, or import a trace.';
   } else {
     status.textContent = 'Frida missing';
-    detail.textContent = 'No local Frida executable; install Frida or import a trace.';
+    detail.textContent = 'No local Frida executable; reinstall CipherDock from the DMG, run pip install -r requirements.txt, or import a trace.';
   }
   startRuntimeButton.disabled = !runtimePreflight || !runtimePreflight.capture_ready || Boolean(runtimeSessionId);
   stopRuntimeButton.disabled = !runtimeSessionId;
@@ -4880,12 +4880,12 @@ function renderRuntimePreflight(errorMessage) {
     setDynamicStageStatus('gadget setup', true);
   } else if (simulatorCompanionActionAvailable()) {
     const candidate = simulatorCompanionCandidate();
-    status.textContent = 'Companion app required';
+    status.textContent = 'Simulator build needed';
     detail.textContent = candidate
       ? 'A matching Simulator build was found. Install it before starting Frida capture.'
-      : 'Import a matching IOSSIMULATOR .app companion build before starting Frida capture.';
+      : 'This is a device IPA. Import a matching IOSSIMULATOR .app, or switch to USB/Gadget for exact device capture.';
     startRuntimeLabel.textContent = candidate ? 'Install Build' : 'Import .app';
-    setDynamicStageStatus('companion required', true);
+    setDynamicStageStatus('simulator build needed', true);
   } else {
     status.textContent = 'Preflight blocked';
     detail.textContent = 'Resolve the failed checks before starting live capture.';
@@ -4948,7 +4948,7 @@ function simulatorCompanionActionAvailable() {
     fridaChannel &&
     fridaChannel.state === 'pass' &&
     targetApp &&
-    targetApp.state === 'fail'
+    ['fail', 'guide'].includes(targetApp.state)
   );
 }
 

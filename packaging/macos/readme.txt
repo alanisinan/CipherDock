@@ -12,8 +12,9 @@ Requirements:
 
   - macOS with Python 3.11+ recommended
   - Xcode Command Line Tools for complete IPA analysis
-  - Optional Frida and Objection tooling for dynamic capture
+  - Local Frida and Objection clients are installed by this package
   - Optional Ghidra analyzeHeadless for symbol enrichment
 
-The installer does not download external dependencies. Optional runtime tools
-can be installed separately after installation.
+Physical iOS device capture still requires an authorized device-side
+Frida/Gadget setup. Simulator capture of device IPAs requires a matching
+Simulator .app build of the same authorized app.

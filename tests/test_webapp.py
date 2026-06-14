@@ -280,9 +280,9 @@ class LiveCaptureTests(unittest.TestCase):
 
         self.assertFalse(preflight["capture_ready"])
         self.assertEqual(preflight["required_action"], "install_simulator_companion")
-        self.assertIn("Device IPAs cannot run directly", preflight["next_steps"][0])
+        self.assertIn("device build", preflight["next_steps"][0])
         target_check = next(check for check in preflight["checks"] if check["id"] == "target-app")
-        self.assertEqual(target_check["state"], "fail")
+        self.assertEqual(target_check["state"], "guide")
 
     def test_simulator_attach_does_not_request_running_process_before_install(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -369,7 +369,7 @@ class LiveCaptureTests(unittest.TestCase):
                         targets = state.runtime_targets("sample")
 
         simulator = next(item for item in targets["targets"] if item["environment"] == "simulator")
-        self.assertEqual(simulator["boundary"], "companion-build evidence")
+        self.assertEqual(simulator["boundary"], "Simulator companion evidence")
         self.assertEqual(simulator["state"], "ready")
         self.assertEqual(targets["binding"]["artifact_kind"], "simulator_companion")
 
