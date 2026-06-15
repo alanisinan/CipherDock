@@ -25,7 +25,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 from .analyzer import analyze_ipa
 from .macho import extract_platform, extract_platform_data
 from .models import result_dir_name
-from .reporting import write_index_report, write_reports
+from .playcover import discover_playcover_pid, install_ipa_in_playcover, launch_playcover_app, playcover_status
+from .reporting import render_report_dict_pdf, render_text_pdf, write_index_report, write_reports
 from .rules import load_rules
 
 
@@ -138,7 +139,7 @@ class WorkbenchState:
                 job.phase = "Writing reports"
                 job.progress = 84 + round((index + 1) / max(total, 1) * 12)
                 report_dir = _unique_report_dir(self.reports, result_dir_name(ipa_path, result.app_name))
-                write_reports(result, report_dir, sarif=True, html_report=True)
+                write_reports(result, report_dir, sarif=True, html_report=True, pdf_report=True)
                 complete.append((result, report_dir))
                 job.reports.append(
                     {
@@ -272,6 +273,7 @@ class WorkbenchState:
             tools[name] = {"available": executable is not None, "path": executable}
         device_status = self._frida_device_status(tools["frida"]["path"])
         simulator_status = self._simulator_status()
+        playcover = playcover_status()
         active = [
             session.payload()
             for session in self.runtime_sessions.values()
@@ -284,6 +286,12 @@ class WorkbenchState:
             "tools": tools,
             "device_status": device_status,
             "simulator_status": simulator_status,
+            "playcover_status": {
+                "installed": playcover.installed,
+                "app_path": str(playcover.app_path) if playcover.app_path else None,
+                "cli_path": str(playcover.cli_path) if playcover.cli_path else None,
+                "detail": playcover.detail,
+            },
             "environments": {
                 "usb": {
                     "ready": installed and bool(device_status["usb_connected"]),
@@ -292,6 +300,10 @@ class WorkbenchState:
                 "simulator": {
                     "ready": installed and bool(simulator_status["booted_devices"]),
                     "devices": simulator_status["booted_devices"],
+                },
+                "playcover": {
+                    "ready": installed and playcover.installed,
+                    "devices": [playcover.detail] if playcover.installed else [],
                 },
             },
             "active_sessions": active,
@@ -305,7 +317,7 @@ class WorkbenchState:
     ) -> Dict[str, Any]:
         if capture_mode not in {"spawn", "attach", "gadget"}:
             raise ValueError("Unsupported capture mode")
-        if runtime_environment not in {"usb", "simulator"}:
+        if runtime_environment not in {"usb", "simulator", "playcover"}:
             raise ValueError("Unsupported runtime environment")
         report = self._load_report(report_id)
         bundle_identifier = str(report.get("info_plist", {}).get("bundle_identifier") or "")
@@ -333,6 +345,8 @@ class WorkbenchState:
                 status,
                 checks,
             )
+        if runtime_environment == "playcover":
+            return self._playcover_preflight(report_id, bundle_identifier, capture_mode, script_path, frida_path, status, checks)
         checks.extend(
             [
                 {
@@ -450,6 +464,68 @@ class WorkbenchState:
             "next_steps": next_steps,
         }
 
+    def _playcover_preflight(
+        self,
+        report_id: str,
+        bundle_identifier: str,
+        capture_mode: str,
+        script_path: Path,
+        frida_path: Optional[str],
+        status: Dict[str, Any],
+        checks: List[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        playcover = status.get("playcover_status", {})
+        installed = bool(playcover.get("installed"))
+        checks.extend(
+            [
+                {
+                    "id": "playcover-installed",
+                    "label": "PlayCover",
+                    "state": "pass" if installed else "fail",
+                    "detail": str(playcover.get("detail") or "PlayCover.app not found."),
+                },
+                {
+                    "id": "hook-script",
+                    "label": "Capture hooks",
+                    "state": "pass" if script_path.exists() else "fail",
+                    "detail": script_path.name if script_path.exists() else "Generated Frida hook script is unavailable.",
+                },
+            ]
+        )
+        pid = 0
+        process_detail = "Launch the target app in PlayCover before attaching."
+        if installed and capture_mode == "attach":
+            try:
+                pid = discover_playcover_pid(bundle_identifier, retries=1, delay=0.1)
+                process_detail = f"Running PlayCover process PID {pid}."
+            except RuntimeError as exc:
+                process_detail = str(exc)
+        process_ready = capture_mode != "attach" or pid > 0
+        checks.append(
+            {
+                "id": "playcover-process",
+                "label": "Running process",
+                "state": "pass" if process_ready else "fail",
+                "detail": process_detail,
+            }
+        )
+        capture_ready = bool(frida_path and installed and script_path.exists() and process_ready)
+        return {
+            "report_id": report_id,
+            "bundle_identifier": bundle_identifier,
+            "capture_mode": capture_mode,
+            "runtime_environment": "playcover",
+            "capture_ready": capture_ready,
+            "checks": checks,
+            "device_probe": {"device_id": "", "reachable": installed, "installed": installed, "running": pid > 0, "pid": pid},
+            "required_action": "launch_playcover_target" if not process_ready else "none",
+            "next_steps": (
+                ["Launch the target app in PlayCover, choose Attach, and refresh preflight."]
+                if not process_ready
+                else ["Preflight passed. Starting capture will attach Frida to the PlayCover macOS process."]
+            ),
+        }
+
     def runtime_targets(self, report_id: str) -> Dict[str, Any]:
         report = self._load_report(report_id)
         bundle_identifier = str(report.get("info_plist", {}).get("bundle_identifier") or "")
@@ -482,6 +558,17 @@ class WorkbenchState:
                 "detail": "No authorized Frida USB target is connected.",
             }
         )
+        playcover_status_payload = status.get("playcover_status", {})
+        playcover_available = bool(playcover_status_payload.get("installed"))
+        playcover_running = False
+        playcover_detail = str(playcover_status_payload.get("detail") or "PlayCover.app not found")
+        if playcover_available:
+            try:
+                pid = discover_playcover_pid(bundle_identifier, retries=1, delay=0.1)
+                playcover_running = True
+                playcover_detail = f"Running PlayCover process PID {pid}."
+            except RuntimeError:
+                playcover_detail = "Open the app in PlayCover, then attach Frida by PID."
         binding = self._target_binding(bundle_identifier)
         if simulator_probe.get("installed") and (
             not binding or binding.get("environment") != "simulator"
@@ -529,6 +616,17 @@ class WorkbenchState:
                     "state": "bundle_match" if usb_probe.get("installed") else "unavailable",
                     "boundary": "bundle match; exact IPA requires provenance verification",
                     "detail": str(usb_probe.get("detail", "")),
+                },
+                {
+                    "environment": "playcover",
+                    "label": "PlayCover",
+                    "device": str(playcover_status_payload.get("detail") or ""),
+                    "available": playcover_available,
+                    "installed": playcover_available,
+                    "running": playcover_running,
+                    "state": "running" if playcover_running else ("available" if playcover_available else "unavailable"),
+                    "boundary": "PlayCover companion evidence",
+                    "detail": playcover_detail,
                 },
             ],
         }
@@ -599,8 +697,23 @@ class WorkbenchState:
         return self.install_simulator_companion(report_id, resolved)
 
     def launch_runtime_target(self, report_id: str, runtime_environment: str) -> Dict[str, Any]:
-        if runtime_environment != "simulator":
-            raise ValueError("Direct launch is currently available for Xcode Simulator companion builds")
+        if runtime_environment not in {"simulator", "playcover"}:
+            raise ValueError("Direct launch is available for Xcode Simulator and PlayCover targets")
+        if runtime_environment == "playcover":
+            report = self._load_report(report_id)
+            bundle_identifier = str(report.get("info_plist", {}).get("bundle_identifier") or "")
+            ipa_path = Path(str(report.get("ipa_path", "")))
+            if not bundle_identifier:
+                raise ValueError("Selected report does not contain a bundle identifier")
+            if ipa_path.exists():
+                install_ipa_in_playcover(ipa_path)
+            launch_playcover_app(bundle_identifier)
+            return {
+                "launched": True,
+                "bundle_identifier": bundle_identifier,
+                "runtime_environment": "playcover",
+                "detail": "PlayCover launch requested.",
+            }
         targets = self.runtime_targets(report_id)
         target = next(item for item in targets["targets"] if item["environment"] == "simulator")
         if not target["installed"]:
@@ -1174,9 +1287,16 @@ class WorkbenchState:
         return session
 
     def _run_runtime_session(self, session: RuntimeSession, frida_path: str) -> None:
-        target_options = ["-f", session.bundle_identifier] if session.capture_mode == "spawn" else ["-N", session.bundle_identifier]
-        connection_options = ["-D", session.device_id] if session.runtime_environment == "simulator" and session.device_id else ["-U"]
-        command = [frida_path, *connection_options, "-q", "-t", "inf", *target_options, "-l", str(session.script_path)]
+        if session.runtime_environment == "playcover":
+            if session.capture_mode == "spawn":
+                install_ipa_in_playcover(session.ipa_path)
+                launch_playcover_app(session.bundle_identifier)
+            pid = discover_playcover_pid(session.bundle_identifier)
+            command = [frida_path, "-p", str(pid), "-q", "-t", "inf", "-l", str(session.script_path)]
+        else:
+            target_options = ["-f", session.bundle_identifier] if session.capture_mode == "spawn" else ["-N", session.bundle_identifier]
+            connection_options = ["-D", session.device_id] if session.runtime_environment == "simulator" and session.device_id else ["-U"]
+            command = [frida_path, *connection_options, "-q", "-t", "inf", *target_options, "-l", str(session.script_path)]
         try:
             session.state = "starting"
             session.phase = "Attaching Frida to authorized target"
@@ -1222,20 +1342,31 @@ class WorkbenchState:
         session.state = "finalizing"
         session.phase = "Merging captured evidence into report"
         is_simulator = session.runtime_environment == "simulator"
+        is_playcover = session.runtime_environment == "playcover"
         result = analyze_ipa(
             session.ipa_path,
             load_rules(None),
             runtime_trace=session.trace_path,
-            runtime_capture_mode="companion_build" if is_simulator else "exact_ipa",
-            runtime_source="Frida Simulator live capture" if is_simulator else "Frida USB device live capture",
+            runtime_capture_mode="companion_build" if is_simulator or is_playcover else "exact_ipa",
+            runtime_source=(
+                "Frida PlayCover live capture"
+                if is_playcover
+                else "Frida Simulator live capture"
+                if is_simulator
+                else "Frida USB device live capture"
+            ),
             runtime_session=session.id,
         )
         if is_simulator:
             result.dynamic.limitations.append(
                 "Runtime evidence was captured from an installed Simulator companion build and is not proof that the analyzed device IPA executed identically."
             )
+        if is_playcover:
+            result.dynamic.limitations.append(
+                "Runtime evidence was captured from a PlayCover-hosted macOS process and is companion execution evidence, not exact device IPA execution."
+            )
         report_dir = _unique_report_dir(self.reports, result_dir_name(session.ipa_path, result.app_name))
-        write_reports(result, report_dir, sarif=True, html_report=True)
+        write_reports(result, report_dir, sarif=True, html_report=True, pdf_report=True)
         session.result_report_id = report_dir.name
         session.state = "completed"
         session.phase = f"Captured evidence saved in {report_dir.name}"
@@ -1590,6 +1721,16 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         return payload if isinstance(payload, dict) else {}
 
     def _serve_file(self, path: Path) -> None:
+        if path.name == "report.pdf":
+            json_path = path.with_name("report.json")
+            markdown_path = path.with_name("report.md")
+            if json_path.exists() and json_path.is_file():
+                payload = json.loads(json_path.read_text(encoding="utf-8"))
+                if isinstance(payload, dict):
+                    path.write_bytes(render_report_dict_pdf(payload))
+            elif not path.exists() and markdown_path.exists() and markdown_path.is_file():
+                title = path.parent.name
+                path.write_bytes(render_text_pdf(f"CipherDock Report - {title}", markdown_path.read_text(encoding="utf-8")))
         if not path.exists() or not path.is_file():
             return self._json({"error": "file not found"}, HTTPStatus.NOT_FOUND)
         data = path.read_bytes()

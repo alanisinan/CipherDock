@@ -126,6 +126,63 @@ class LiveCaptureTests(unittest.TestCase):
         self.assertIn("-t", command)
         self.assertEqual(command[command.index("-t") + 1], "inf")
 
+    def test_playcover_runner_launches_and_attaches_by_pid(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = WorkbenchState(root / "data", root / "workbench.html")
+            session_dir = root / "data" / "runtime-sessions" / "playcover"
+            session_dir.mkdir(parents=True)
+            ipa = root / "app.ipa"
+            ipa.write_bytes(b"ipa")
+            session = RuntimeSession(
+                id="playcover",
+                report_id="report",
+                ipa_path=ipa,
+                bundle_identifier="com.example.app",
+                capture_mode="spawn",
+                runtime_environment="playcover",
+                script_path=root / "hooks.js",
+                trace_path=session_dir / "runtime-capture.jsonl",
+            )
+
+            with mock.patch("ire_zero.webapp.install_ipa_in_playcover") as install:
+                with mock.patch("ire_zero.webapp.launch_playcover_app") as launch:
+                    with mock.patch("ire_zero.webapp.discover_playcover_pid", return_value=4321):
+                        with mock.patch("ire_zero.webapp.subprocess.Popen", return_value=_FakeProcess()) as popen:
+                            with mock.patch.object(state, "_finalize_runtime_session"):
+                                state._run_runtime_session(session, "/fake/frida")
+
+        install.assert_called_once_with(ipa)
+        launch.assert_called_once_with("com.example.app")
+        command = popen.call_args.args[0]
+        self.assertEqual(command[:3], ["/fake/frida", "-p", "4321"])
+        self.assertNotIn("-U", command)
+
+    def test_playcover_preflight_requires_running_process_for_attach(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = WorkbenchState(root / "data", root / "workbench.html")
+            report_dir = state.reports / "sample"
+            report_dir.mkdir()
+            (report_dir / "report.json").write_text(
+                json.dumps({"info_plist": {"bundle_identifier": "com.example.app"}}),
+                encoding="utf-8",
+            )
+            (report_dir / "frida-hooks.js").write_text("// hooks", encoding="utf-8")
+            status = {
+                "playcover_status": {"installed": True, "detail": "/Applications/PlayCover.app"},
+            }
+            with mock.patch.object(state, "_find_runtime_tool", return_value="/tool/frida"):
+                with mock.patch.object(state, "runtime_status", return_value=status):
+                    with mock.patch("ire_zero.webapp.discover_playcover_pid", side_effect=RuntimeError("not running")):
+                        preflight = state.runtime_preflight("sample", "attach", "playcover")
+
+        self.assertFalse(preflight["capture_ready"])
+        self.assertEqual(preflight["runtime_environment"], "playcover")
+        self.assertEqual(preflight["required_action"], "launch_playcover_target")
+        self.assertEqual(preflight["checks"][-1]["id"], "playcover-process")
+        self.assertEqual(preflight["checks"][-1]["state"], "fail")
+
     def test_preflight_requires_running_app_for_attach_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -10,10 +10,10 @@ produces a deterministic risk score across seven evidence-weighted categories:
 transport security, hardcoded secrets, private API usage, jailbreak detection,
 network endpoints, entitlements, and symbol intelligence.
 
-It optionally captures live Frida runtime events from an authorized Simulator or
-device target and performs cross-layer correlation between static and dynamic
-evidence, classifying each captured event as CONFIRMED, DOMAIN_MATCH, or
-DYNAMIC_ONLY against static URL evidence.
+It optionally captures live Frida runtime events from an authorized Simulator,
+device, or PlayCover companion process and performs cross-layer correlation
+between static and dynamic evidence, classifying each captured event as
+CONFIRMED, DOMAIN_MATCH, or DYNAMIC_ONLY against static URL evidence.
 
 CipherDock is designed for authorized security research, internal app review,
 and reproducible evaluation workflows.
@@ -35,14 +35,24 @@ Dynamic evidence view showing the captured `NSURLSession` endpoint and its
 
 ![CipherDock dynamic correlation workbench](docs/screenshots/workbench-dynamic-correlation.png)
 
+FAQ page built into the workbench, with practical guidance for analysts using
+static analysis, dynamic capture, PlayCover, and report exports.
+
+![CipherDock FAQ page](docs/screenshots/workbench-faq-page.jpg)
+
+PlayCover runtime mode in the Devices panel. CipherDock can use PlayCover as an
+Apple Silicon companion-process backend and attach Frida by PID.
+
+![CipherDock PlayCover runtime setup](docs/screenshots/workbench-playcover-runtime.jpg)
+
 ## Requirements
 
 - Python 3.11+
 - macOS for complete iOS IPA analysis
 - Xcode Command Line Tools
 - Apple command-line tools used by the analyzer: `codesign`, `otool`, and `nm`
-- Frida 17.9+ for optional dynamic capture; the macOS installer installs the local client tools automatically
-- Objection for optional device-assisted workflows; the macOS installer installs it automatically
+- Frida 17.9+ for optional dynamic capture
+- PlayCover for optional Apple Silicon companion-process capture
 - Ghidra `analyzeHeadless` for optional symbol enrichment
 
 Linux can run the pure-Python parsing and report-generation paths, but macOS is
@@ -55,50 +65,47 @@ tools are macOS-native.
 pip install -e .
 ```
 
-Install the optional Frida/Objection workflow helpers when you want dynamic
-capture support in the same environment:
+Install optional dynamic workflow helpers when you want runtime capture support
+in the same environment:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## After macOS Installer
+## macOS DMG Installer
 
-For a simpler macOS install, download or open the repository DMG:
+CipherDock includes a DMG installer wizard under `packaging/macos/`. The wizard
+installs CipherDock into `/Applications/CipherDock`, creates a managed Python
+virtual environment, installs Frida client tools, creates command-line
+launchers, and checks PlayCover for Apple Silicon dynamic capture.
 
-```text
-dist/CipherDock-1.0.0.dmg
+Build a standard DMG:
+
+```bash
+packaging/macos/build-dmg.sh
 ```
 
-Double-click the DMG, then double-click `CipherDock-1.0.0.pkg` to start the
-macOS Installer wizard. The installer copies the project to
-`/Applications/CipherDock`, creates a managed Python virtual environment,
-installs the Frida/Objection client tools, and creates these commands:
+Build a DMG that also includes a local PlayCover.app:
+
+```bash
+INCLUDE_PLAYCOVER=1 packaging/macos/build-dmg.sh
+```
+
+If PlayCover is not bundled, the installer detects an existing PlayCover
+install, tries Homebrew, or opens the official PlayCover download page.
+
+After installing from the DMG, these commands are available:
 
 ```bash
 cipherdock --help
-cipherdock analyze /path/to/app.ipa --sarif --html
+cipherdock analyze /path/to/app.ipa --sarif --html --pdf
 cipherdock-workbench
-cipherdock-workbench-stop
 cipherdock-workbench-restart
 ```
 
 `cipherdock-workbench` starts the local browser workbench. Open the printed
 local URL in your browser, upload an authorized IPA, and review the generated
-static, dynamic, and HTML report views.
-
-If the workbench is already running and you want a clean restart, stop it first:
-
-```bash
-cipherdock-workbench-restart
-```
-
-Or stop and start it manually:
-
-```bash
-cipherdock-workbench-stop
-cipherdock-workbench
-```
+static, dynamic, HTML, and PDF report views.
 
 To run a second workbench without stopping the existing listener, choose another
 port:
@@ -107,37 +114,36 @@ port:
 CIPHERDOCK_PORT=8766 cipherdock-workbench
 ```
 
-Workbench data is stored in:
-
-```text
-~/Library/Application Support/CipherDock/workbench-data
-```
-
 ## Quick Start
 
-Analyze one authorized IPA and write JSON, Markdown, SARIF, HTML, and Frida hook
-artifacts to a report directory:
+Analyze a single authorized IPA:
 
 ```bash
-python -m ire_zero analyze app.ipa --sarif --html
+cipherdock analyze app.ipa --html --pdf --sarif
 ```
 
 Write reports to a specific output directory:
 
 ```bash
-python -m ire_zero analyze app.ipa --output reports/app --sarif --html
+cipherdock analyze app.ipa --output reports/app --html --pdf --sarif
 ```
 
 Launch the local browser workbench:
 
 ```bash
-python webapp.py
+cipherdock-workbench
+```
+
+Restart the workbench if port 8765 is already in use:
+
+```bash
+cipherdock-workbench-restart
 ```
 
 Run the tool health check:
 
 ```bash
-python -m ire_zero doctor
+cipherdock doctor
 ```
 
 Run the evaluation pipeline:
@@ -152,21 +158,18 @@ Verify corpus integrity:
 python eval/verify_corpus.py
 ```
 
-Generate an evaluation summary from the current evaluation numbers:
-
-```bash
-python eval/generate_summary.py
-```
-
 ## Sample Output
 
-An analysis run with `--sarif --html` produces a report directory containing:
+For each analyzed IPA, CipherDock can generate:
 
 - `report.json` with the complete machine-readable evidence model
 - `report.md` with grouped findings and analyst-readable context
-- `report.sarif` for security tooling ingestion
 - `report.html`, an interactive HTML report for browsing findings, binary
   evidence, dynamic observations, and cross-layer endpoint correlation
+- `report.pdf`, a portable executive report with metadata, score breakdown,
+  findings, static evidence, dynamic events, tool status, and analyst notes
+- `report.sarif` for security tooling ingestion
+- `runtime-plan.md` with a capture plan for authorized runtime testing
 - `frida-hooks.js` for authorized runtime capture
 
 The browser workbench can also load generated reports and batch reports from
@@ -182,7 +185,7 @@ The browser workbench can also load generated reports and batch reports from
 | Threshold | 50 (calibration-selected) |
 | Significance | p=0.000015 (Mann-Whitney U) |
 | Dynamic capture | Frida companion-build, DOMAIN_MATCH |
-| Tests passing | 58 |
+| Tests passing | 68 |
 
 ## Corpus
 
@@ -199,7 +202,7 @@ for build instructions.
 ```text
 ire_zero/        Core analysis library
 eval/            Corpus evaluation scripts and results
-docs/            Evaluation documentation
+docs/            Technical documentation and screenshots
 rules/           JSON detection rule pack
 tests/           Test suite
 webapp.py        Browser workbench server

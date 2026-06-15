@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ire_zero.analyzer import analyze_ipa
-from ire_zero.reporting import write_reports
+from ire_zero.reporting import render_pdf, write_reports
 from ire_zero.rules import load_rules
 
 
@@ -20,7 +20,7 @@ class PipelineTests(unittest.TestCase):
 
             result = analyze_ipa(ipa, load_rules(None))
             report_dir = root / "reports"
-            write_reports(result, report_dir, sarif=True, html_report=True)
+            write_reports(result, report_dir, sarif=True, html_report=True, pdf_report=True)
 
             finding_ids = {finding.id for finding in result.findings}
             self.assertEqual(result.info_plist.bundle_identifier, "com.example.pipeline")
@@ -39,12 +39,25 @@ class PipelineTests(unittest.TestCase):
             self.assertTrue((report_dir / "report.md").exists())
             self.assertTrue((report_dir / "report.sarif").exists())
             self.assertTrue((report_dir / "report.html").exists())
+            self.assertTrue((report_dir / "report.pdf").exists())
             self.assertTrue((report_dir / "runtime-plan.md").exists())
             self.assertTrue((report_dir / "frida-hooks.js").exists())
+            self.assertTrue((report_dir / "report.pdf").read_bytes().startswith(b"%PDF-1.4"))
             hooks = (report_dir / "frida-hooks.js").read_text(encoding="utf-8")
             plan = (report_dir / "runtime-plan.md").read_text(encoding="utf-8")
             self.assertIn("SecTrustEvaluateWithError", hooks)
             self.assertIn("Assessment Campaigns", plan)
+
+    def test_render_pdf_produces_downloadable_document(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ipa = _make_synthetic_ipa(root)
+            result = analyze_ipa(ipa, load_rules(None))
+
+            pdf = render_pdf(result)
+
+        self.assertTrue(pdf.startswith(b"%PDF-1.4"))
+        self.assertIn(b"trailer", pdf)
 
 
 def _make_synthetic_ipa(root: Path) -> Path:

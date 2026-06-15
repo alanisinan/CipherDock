@@ -20,6 +20,9 @@ dynamic = [
 ]
 
 [project.scripts]
+cipherdock = "ire_zero.cli:main"
+cipherdock-workbench = "ire_zero.webapp:main"
+cipherdock-workbench-restart = "ire_zero.workbench_restart:main"
 ire-zero = "ire_zero.cli:main"
 ire-zero-workbench = "ire_zero.webapp:main"
 

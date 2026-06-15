@@ -9,6 +9,8 @@ from pathlib import Path
 from shutil import which
 from typing import Iterable, List, Optional
 
+from .playcover import amfi_status, playcover_status, sip_status
+
 
 @dataclass(frozen=True)
 class DoctorCheck:
@@ -31,6 +33,10 @@ def run_doctor(ghidra_headless: Optional[Path] = None) -> List[DoctorCheck]:
         _tool_check("objection", ["objection", "--version"], required=False),
         _tool_check("ideviceinstaller", ["ideviceinstaller", "--version"], required=False),
         _tool_check("ideviceimagemounter", ["ideviceimagemounter", "--help"], required=False),
+        _playcover_check(),
+        _playcover_cli_check(),
+        _security_check("sip", sip_status()),
+        _security_check("amfi", amfi_status()),
     ]
     return checks
 
@@ -48,7 +54,7 @@ def render_doctor(checks: Iterable[DoctorCheck]) -> str:
             "",
             "Required: Python 3.9+.",
             "Static tools improve fidelity: codesign, otool, nm, class-dump, and Ghidra analyzeHeadless.",
-            "Dynamic tools enable capture workflows: frida, objection, ideviceinstaller, and ideviceimagemounter.",
+            "Dynamic tools enable capture workflows: frida, objection, ideviceinstaller, ideviceimagemounter, and PlayCover.",
         ]
     )
     return "\n".join(lines)
@@ -86,3 +92,23 @@ def _ghidra_check(ghidra_headless: Optional[Path]) -> DoctorCheck:
     if ghidra_headless is not None:
         return DoctorCheck("ghidra", "missing", f"not found: {ghidra_headless}", required=False)
     return DoctorCheck("ghidra", "missing", "analyzeHeadless not found; pass --ghidra-headless when needed", required=False)
+
+
+def _playcover_check() -> DoctorCheck:
+    status = playcover_status()
+    if status.installed:
+        return DoctorCheck("playcover", "ok", status.detail, required=False)
+    return DoctorCheck("playcover", "missing", status.detail, required=False)
+
+
+def _playcover_cli_check() -> DoctorCheck:
+    status = playcover_status()
+    if status.cli_path is not None:
+        return DoctorCheck("playcover-cli", "ok", str(status.cli_path), required=False)
+    if status.installed:
+        return DoctorCheck("playcover-cli", "warn", "CLI not found; IPA import will fall back to opening PlayCover.app", required=False)
+    return DoctorCheck("playcover-cli", "missing", "PlayCover CLI not found", required=False)
+
+
+def _security_check(name: str, status: dict[str, str]) -> DoctorCheck:
+    return DoctorCheck(name, status.get("status", "warn"), status.get("detail", "status unavailable"), required=False)

@@ -415,8 +415,97 @@ button {
   border: 1px solid var(--border);
 }
 
-.main {
+.guide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 8, 12, 0.72);
+}
+
+.guide-dialog {
+  width: min(980px, 100%);
+  max-height: min(820px, 92vh);
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.guide-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-head strong {
+  display: block;
+  font-size: 18px;
+}
+
+.guide-head span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.guide-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.guide-section {
   padding: 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.guide-section:nth-child(odd) {
+  border-right: 1px solid var(--border-soft);
+}
+
+.guide-section.full {
+  grid-column: 1 / -1;
+  border-right: 0;
+}
+
+.guide-section h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.guide-section ol,
+.guide-section ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.guide-section li {
+  margin: 7px 0;
+}
+
+.guide-section code {
+  color: var(--text);
+}
+
+.main,
+.faq-page {
+  padding: 18px;
+}
+
+.main {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(330px, 0.75fr);
   grid-template-areas:
@@ -432,6 +521,10 @@ button {
 .main > .side-stack { grid-area: side; }
 .main > section.panel:nth-child(3) { grid-area: analysis; }
 .main > section.panel:nth-child(4) { grid-area: evidence; }
+
+.app-page[hidden] {
+  display: none;
+}
 
 .panel {
   background: var(--surface);
@@ -1983,6 +2076,94 @@ pre {
   grid-column: 1 / -1;
 }
 
+.faq-page {
+  min-height: calc(100vh - 64px);
+  background:
+    linear-gradient(180deg, rgba(72, 199, 189, 0.05), transparent 220px),
+    var(--bg);
+}
+
+.faq-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.faq-hero {
+  padding: 26px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.faq-hero span {
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.faq-hero h2 {
+  max-width: 760px;
+  margin: 7px 0 8px;
+  font-size: 28px;
+  line-height: 1.12;
+}
+
+.faq-hero p {
+  max-width: 780px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.faq-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.faq-item {
+  padding: 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.faq-item strong {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 7px;
+}
+
+.faq-item p,
+.faq-item li {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.faq-item p,
+.faq-item ul,
+.faq-item ol {
+  margin: 0;
+}
+
+.faq-item ul,
+.faq-item ol {
+  padding-left: 18px;
+}
+
 .batch-panel[hidden] {
   display: none;
 }
@@ -2131,6 +2312,14 @@ td strong {
   .runtime-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .guide-body {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-section:nth-child(odd) {
+    border-right: 0;
+  }
 }
 
 @media (max-width: 860px) {
@@ -2145,12 +2334,14 @@ td strong {
   }
 
   .main,
+  .faq-page,
   .bottom-grid,
   .intake,
   .analysis-grid,
   .re-workbench,
   .dynamic-workbench,
-  .runtime-summary {
+  .runtime-summary,
+  .faq-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2159,6 +2350,14 @@ td strong {
   .runtime-console,
   .runtime-inspector {
     min-height: auto;
+  }
+
+  .faq-hero {
+    padding: 18px;
+  }
+
+  .faq-hero h2 {
+    font-size: 23px;
   }
 }
 </style>
@@ -2193,6 +2392,10 @@ td strong {
       <a class="nav-item" href="#report-panel" data-target="report-panel" aria-label="Reports">
         <svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 4-4 3 3 5-7"/></svg>
         <span>Reports</span>
+      </a>
+      <a class="nav-item" href="#faq-page" data-target="faq-page" aria-label="FAQ">
+        <svg viewBox="0 0 24 24"><path d="M12 18h.01"/><path d="M9.6 9a2.6 2.6 0 1 1 3.8 2.3c-.9.5-1.4 1.2-1.4 2.2"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>FAQ</span>
       </a>
     </div>
 
@@ -2244,6 +2447,9 @@ td strong {
         <select class="report-select" id="reportSelector" aria-label="Saved reports">
           <option value="">Saved reports</option>
         </select>
+        <button class="icon-button" id="guideButton" type="button" title="Guide" aria-label="Open guide">
+          <svg viewBox="0 0 24 24"><path d="M12 18h.01"/><path d="M9.6 9a2.6 2.6 0 1 1 3.8 2.3c-.9.5-1.4 1.2-1.4 2.2"/><circle cx="12" cy="12" r="9"/></svg>
+        </button>
         <button class="icon-button" type="button" title="Settings" aria-label="Settings">
           <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2 3.4-.2-.1a1.7 1.7 0 0 0-1.9.1 8 8 0 0 1-1.7.7 1.7 1.7 0 0 0-1.2 1.5V23H9.2v-.4A1.7 1.7 0 0 0 8 21.1a8 8 0 0 1-1.7-.7 1.7 1.7 0 0 0-1.9-.1l-.2.1-2-3.4.1-.1A1.7 1.7 0 0 0 2.6 15 8 8 0 0 1 2 13.2 1.7 1.7 0 0 0 .6 12H.3V8h.3A1.7 1.7 0 0 0 2 6.8 8 8 0 0 1 2.6 5a1.7 1.7 0 0 0-.3-1.9l-.1-.1 2-3.4.2.1a1.7 1.7 0 0 0 1.9-.1A8 8 0 0 1 8 .9 1.7 1.7 0 0 0 9.2-.6V-1h3.6v.4A1.7 1.7 0 0 0 14 .9a8 8 0 0 1 1.7.7 1.7 1.7 0 0 0 1.9.1l.2-.1 2 3.4-.1.1a1.7 1.7 0 0 0-.3 1.9 8 8 0 0 1 .6 1.8A1.7 1.7 0 0 0 21.4 8h.3v4h-.3a1.7 1.7 0 0 0-1.4 1.2 8 8 0 0 1-.6 1.8Z"/></svg>
         </button>
@@ -2255,7 +2461,7 @@ td strong {
       </div>
     </header>
 
-    <main class="main">
+    <main class="main app-page" id="workbench-page">
       <section class="panel" id="intake-panel" data-nav-section="intake-panel">
         <div class="panel-head">
           <div class="panel-title">
@@ -2405,6 +2611,7 @@ td strong {
               <div class="capture-modes environment-modes" role="group" aria-label="Runtime environment">
                 <button class="active" type="button" data-runtime-environment="usb">USB iPhone</button>
                 <button type="button" data-runtime-environment="simulator">Xcode Simulator</button>
+                <button type="button" data-runtime-environment="playcover">PlayCover</button>
               </div>
               <div class="runtime-field-label">Execution Targets</div>
               <div class="execution-target-manager" aria-label="Dynamic target manager">
@@ -2467,7 +2674,11 @@ td strong {
           <div class="panel-tools">
             <button class="ghost" id="exportButton" type="button">
               <svg viewBox="0 0 24 24"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>
-              Export
+              HTML
+            </button>
+            <button class="ghost" id="exportPdfButton" type="button">
+              <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+              PDF
             </button>
           </div>
         </div>
@@ -2729,6 +2940,89 @@ td strong {
         </section>
       </div>
     </main>
+
+    <main class="faq-page app-page" id="faq-page" hidden>
+      <div class="faq-shell">
+        <section class="faq-hero">
+          <span>Application guide</span>
+          <h2>FAQ and workflow help</h2>
+          <p>Use this page when you need a quick answer about what CipherDock does, how to run a static analysis, how runtime capture works, or how to export polished reports.</p>
+          <div class="faq-actions">
+            <a class="ghost" href="#intake-panel" data-target="intake-panel">Open Workbench</a>
+            <a class="ghost" href="#runtime-panel" data-target="runtime-panel">Runtime Setup</a>
+            <button class="ghost" id="faqGuideButton" type="button">Open Quick Guide</button>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <strong>Frequently Asked Questions</strong>
+              <span>What is inside CipherDock and how to use it</span>
+            </div>
+          </div>
+          <div class="faq-grid">
+            <div class="faq-item">
+              <strong>What does CipherDock analyze?</strong>
+              <p>CipherDock accepts authorized iOS IPA files. It unpacks the app, reads Info.plist values, extracts signing and entitlement metadata, scans strings, inspects Mach-O structure, and generates a deterministic risk score.</p>
+            </div>
+            <div class="faq-item">
+              <strong>What do the main tabs mean?</strong>
+              <ul>
+                <li><code>Workbench</code>: load targets and manage the queue.</li>
+                <li><code>Pipelines</code>: track analysis progress and score breakdown.</li>
+                <li><code>Devices</code>: plan or run dynamic capture.</li>
+                <li><code>Reports</code>: review batch outputs, issue matrix, and exports.</li>
+              </ul>
+            </div>
+            <div class="faq-item">
+              <strong>How do I analyze one IPA?</strong>
+              <ol>
+                <li>Click <code>Select IPA</code>.</li>
+                <li>Choose an authorized <code>.ipa</code> file.</li>
+                <li>Click <code>Run</code>.</li>
+                <li>Open <code>Static</code>, <code>Dynamic</code>, and <code>AI Notes</code> in the Evidence section.</li>
+              </ol>
+            </div>
+            <div class="faq-item">
+              <strong>How do I analyze a folder of IPAs?</strong>
+              <p>Click <code>Import Folder</code>, choose a folder containing IPA files, then click <code>Run</code>. CipherDock creates one report per app and a batch dashboard.</p>
+            </div>
+            <div class="faq-item">
+              <strong>What is Static evidence?</strong>
+              <p>Static evidence is recovered without running the app. It includes URLs, IPs, possible secrets, suspicious keywords, private API indicators, linked libraries, embedded frameworks, Mach-O sections, symbols, and scored findings.</p>
+            </div>
+            <div class="faq-item">
+              <strong>What is Dynamic evidence?</strong>
+              <p>Dynamic evidence comes from authorized runtime instrumentation. CipherDock can import a JSON/JSONL trace or run Frida capture through USB iPhone, Xcode Simulator companion builds, or PlayCover companion processes.</p>
+            </div>
+            <div class="faq-item">
+              <strong>When should I use PlayCover?</strong>
+              <p>Use <code>PlayCover</code> when you want to run a compatible iOS app as a macOS process on Apple Silicon. CipherDock imports or opens the app, finds the PID by bundle ID, and attaches Frida with <code>frida -p</code>.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Why does Simulator say companion build?</strong>
+              <p>Device IPAs cannot run directly inside Xcode Simulator. If you use a matching Simulator build, CipherDock labels the capture as companion-build evidence so the report stays honest about execution fidelity.</p>
+            </div>
+            <div class="faq-item">
+              <strong>What are AI Notes?</strong>
+              <p>AI Notes are deterministic evidence summaries generated from the report. They are not remote LLM output. Use the Analyst Notebook to add your own conclusions, reproduction notes, and false-positive decisions.</p>
+            </div>
+            <div class="faq-item">
+              <strong>How do I export a full report?</strong>
+              <p>After analysis, click <code>HTML</code> for the browser report or <code>PDF</code> for a portable report. Each report folder also includes <code>report.json</code>, <code>report.md</code>, <code>report.sarif</code>, <code>runtime-plan.md</code>, and <code>frida-hooks.js</code>.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Why is dynamic capture blocked?</strong>
+              <p>Open <code>Devices</code> and read Runtime Preflight. Common blockers are missing Frida, no booted Simulator, target app not installed, no running app for Attach mode, or a device IPA being used where a Simulator companion build is required.</p>
+            </div>
+            <div class="faq-item">
+              <strong>What should I do before sharing results?</strong>
+              <p>Confirm the IPA was authorized for testing, review dynamic capture mode labels, add analyst notes for manual context, and export the PDF or HTML report with the evidence you want to share.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
 </div>
 
@@ -2738,8 +3032,85 @@ td strong {
 <input class="hidden-input" id="companionAppInput" type="file" webkitdirectory directory multiple>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<div class="guide-backdrop" id="guideDialog" role="dialog" aria-modal="true" aria-labelledby="guideTitle" hidden>
+  <div class="guide-dialog">
+    <div class="guide-head">
+      <div>
+        <strong id="guideTitle">CipherDock Guide</strong>
+        <span>Analyze authorized IPA files, inspect evidence, capture runtime behavior, and export reports.</span>
+      </div>
+      <button class="tool-button" id="closeGuideButton" type="button" title="Close guide" aria-label="Close guide">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="guide-body">
+      <section class="guide-section">
+        <h3>1. Analyze An IPA</h3>
+        <ol>
+          <li>Use <code>Select IPA</code> for one file, or <code>Import Folder</code> for a batch.</li>
+          <li>Click <code>Run</code>. CipherDock unpacks the IPA, parses the plist, scans strings, inspects Mach-O metadata, and scores findings.</li>
+          <li>Open saved results from the report selector when you return later.</li>
+        </ol>
+      </section>
+      <section class="guide-section">
+        <h3>2. Read The Evidence</h3>
+        <ul>
+          <li><code>Static</code> shows recovered symbols, imports, strings, sections, frameworks, dylibs, and findings.</li>
+          <li><code>Dynamic</code> shows planned probes before capture, then observed runtime events after capture.</li>
+          <li><code>AI Notes</code> are deterministic analyst summaries generated from the evidence in the report.</li>
+        </ul>
+      </section>
+      <section class="guide-section">
+        <h3>3. Capture Runtime Behavior</h3>
+        <ol>
+          <li>Select <code>USB iPhone</code>, <code>Xcode Simulator</code>, or <code>PlayCover</code>.</li>
+          <li>Click <code>Refresh</code> to run preflight. Resolve any failed checks shown in the list.</li>
+          <li>Use <code>Spawn</code> to launch then attach, or <code>Attach</code> when the app is already running.</li>
+          <li>Captured events are correlated against static URLs and symbols as <code>CONFIRMED</code>, <code>DOMAIN_MATCH</code>, or <code>DYNAMIC_ONLY</code>.</li>
+        </ol>
+      </section>
+      <section class="guide-section">
+        <h3>4. PlayCover Mode</h3>
+        <ul>
+          <li>PlayCover runs compatible iOS apps as macOS processes on Apple Silicon.</li>
+          <li>CipherDock imports the IPA when possible, opens the app, finds the PID by bundle identifier, and attaches Frida with <code>frida -p</code>.</li>
+          <li>PlayCover evidence is labeled as companion execution evidence, not exact physical-device IPA execution.</li>
+        </ul>
+      </section>
+      <section class="guide-section">
+        <h3>5. Export Reports</h3>
+        <ul>
+          <li><code>HTML</code> opens the full interactive report.</li>
+          <li><code>PDF</code> downloads a portable report with metadata, score breakdown, findings, static evidence, dynamic events, tool status, and notes.</li>
+          <li>Each report folder also contains <code>report.json</code>, <code>report.md</code>, <code>report.sarif</code>, <code>runtime-plan.md</code>, and <code>frida-hooks.js</code>.</li>
+        </ul>
+      </section>
+      <section class="guide-section">
+        <h3>6. Good Practice</h3>
+        <ul>
+          <li>Only analyze and instrument apps you are authorized to test.</li>
+          <li>Keep dynamic capture notes honest about the backend: USB device, Simulator companion build, or PlayCover companion process.</li>
+          <li>Use analyst notes to record manual context, reproduction steps, and false-positive decisions.</li>
+        </ul>
+      </section>
+      <section class="guide-section full">
+        <h3>Useful CLI Commands</h3>
+        <ul>
+          <li><code>cipherdock analyze app.ipa --html --pdf --sarif</code></li>
+          <li><code>cipherdock analyze app.ipa --playcover --html --pdf</code></li>
+          <li><code>cipherdock doctor</code></li>
+          <li><code>cipherdock-workbench-restart</code></li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+
 <script>
 const navItems = Array.from(document.querySelectorAll('.nav-item[data-target]'));
+const targetLinks = Array.from(document.querySelectorAll('a[data-target]'));
+const workbenchPage = document.getElementById('workbench-page');
+const faqPage = document.getElementById('faq-page');
 
 function setActiveNav(targetId, activeItem) {
   navItems.forEach((item) => {
@@ -2747,17 +3118,43 @@ function setActiveNav(targetId, activeItem) {
   });
 }
 
-navItems.forEach((item) => {
-  item.addEventListener('click', (event) => {
-    const target = document.getElementById(item.dataset.target);
-    if (!target) return;
+function showAppPage(targetId) {
+  const isFaq = targetId === 'faq-page';
+  workbenchPage.hidden = isFaq;
+  faqPage.hidden = !isFaq;
+}
+
+function navigateToTarget(link, smooth) {
+  const targetId = link.dataset.target;
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const matchingNav = link.classList.contains('nav-item')
+    ? link
+    : navItems.find((item) => item.dataset.target === targetId);
+  showAppPage(targetId);
+  setActiveNav(targetId, matchingNav || link);
+  history.replaceState(null, '', link.getAttribute('href'));
+  if (targetId === 'faq-page') {
+    window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+    return;
+  }
+  const top = target.getBoundingClientRect().top + window.scrollY - 84;
+  window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+targetLinks.forEach((link) => {
+  link.addEventListener('click', (event) => {
+    if (!document.getElementById(link.dataset.target)) return;
     event.preventDefault();
-    const top = target.getBoundingClientRect().top + window.scrollY - 84;
-    setActiveNav(item.dataset.target, item);
-    history.replaceState(null, '', item.getAttribute('href'));
-    window.scrollTo({ top, behavior: 'smooth' });
+    navigateToTarget(link, true);
   });
 });
+
+const initialTargetId = window.location.hash.replace('#', '');
+const initialTargetLink = targetLinks.find((link) => link.dataset.target === initialTargetId);
+if (initialTargetLink) {
+  navigateToTarget(initialTargetLink, false);
+}
 
 const tabs = Array.from(document.querySelectorAll('.tab'));
 tabs.forEach((tab) => {
@@ -2788,7 +3185,12 @@ const runtimePlanButton = document.getElementById('runtimePlanButton');
 const hookScriptButton = document.getElementById('hookScriptButton');
 const startRuntimeButton = document.getElementById('startRuntimeButton');
 const stopRuntimeButton = document.getElementById('stopRuntimeButton');
+const guideButton = document.getElementById('guideButton');
+const faqGuideButton = document.getElementById('faqGuideButton');
+const closeGuideButton = document.getElementById('closeGuideButton');
+const guideDialog = document.getElementById('guideDialog');
 const exportButton = document.getElementById('exportButton');
+const exportPdfButton = document.getElementById('exportPdfButton');
 const reportSelector = document.getElementById('reportSelector');
 const activeTargetLabel = document.getElementById('activeTargetLabel');
 const ipaInput = document.getElementById('ipaInput');
@@ -2843,7 +3245,8 @@ let runtimeCapability = null;
 let runtimePreflight = null;
 let runtimePreflightRequest = 0;
 let runtimeCaptureMode = 'spawn';
-let runtimeEnvironment = localStorage.getItem('ire-zero-runtime-environment') === 'simulator' ? 'simulator' : 'usb';
+const savedRuntimeEnvironment = localStorage.getItem('ire-zero-runtime-environment');
+let runtimeEnvironment = ['usb', 'simulator', 'playcover'].includes(savedRuntimeEnvironment) ? savedRuntimeEnvironment : 'usb';
 let simulatorBootAttemptKey = '';
 let simulatorBootInProgress = false;
 let runtimeTargets = null;
@@ -4212,6 +4615,16 @@ function escapeHtml(value) {
   }[char]));
 }
 
+function openGuide() {
+  guideDialog.hidden = false;
+  closeGuideButton.focus();
+}
+
+function closeGuide() {
+  guideDialog.hidden = true;
+  guideButton.focus();
+}
+
 function riskBadgeClass(item) {
   if (item.risk === 'high' || item.mapClass === 'risk') return 'risk';
   if (item.kind === 'Private API' || item.mapClass === 'private') return 'api';
@@ -4601,21 +5014,24 @@ function renderRuntimeAvailability() {
   if (ready) {
     const detectedDevice = (selectedEnvironment.devices || [])[0];
     const name = typeof detectedDevice === 'object' ? detectedDevice.name : detectedDevice;
-    status.textContent = runtimeEnvironment === 'simulator' ? 'Simulator visible' : 'Device visible';
+    status.textContent = runtimeEnvironment === 'simulator' ? 'Simulator visible' : runtimeEnvironment === 'playcover' ? 'PlayCover visible' : 'Device visible';
     status.classList.add('ready');
-    detail.textContent = 'Frida installed · ' + (name || (runtimeEnvironment === 'simulator' ? 'booted Simulator' : 'USB iOS device')) + ' detected. Run target preflight.';
+    detail.textContent = 'Frida installed · ' + (name || (runtimeEnvironment === 'simulator' ? 'booted Simulator' : runtimeEnvironment === 'playcover' ? 'PlayCover app' : 'USB iOS device')) + ' detected. Run target preflight.';
   } else if (installed) {
     status.textContent = 'Frida installed';
     status.classList.add('ready');
     detail.textContent = runtimeEnvironment === 'simulator'
       ? 'No booted Xcode Simulator is available for Frida capture.'
-      : 'Connect an authorized USB iOS runtime with matching Frida Server, or import a trace.';
+      : runtimeEnvironment === 'playcover'
+        ? 'Install PlayCover or launch a compatible PlayCover app before attach capture.'
+        : 'Connect an authorized USB iOS runtime with matching Frida Server, or import a trace.';
   } else {
     status.textContent = 'Frida missing';
     detail.textContent = 'No local Frida executable; reinstall CipherDock from the DMG, run pip install -r requirements.txt, or import a trace.';
   }
   startRuntimeButton.disabled = !runtimePreflight || !runtimePreflight.capture_ready || Boolean(runtimeSessionId);
   stopRuntimeButton.disabled = !runtimeSessionId;
+  launchTargetButton.textContent = runtimeEnvironment === 'playcover' ? 'Open' : 'Launch';
 }
 
 async function refreshRuntimeTargets() {
@@ -4644,6 +5060,7 @@ function renderRuntimeTargets() {
   const boundary = document.getElementById('runtimeTargetBoundary');
   const list = document.getElementById('runtimeTargetList');
   installCompanionButton.hidden = runtimeEnvironment !== 'simulator';
+  launchTargetButton.textContent = runtimeEnvironment === 'playcover' ? 'Open' : 'Launch';
   if (!activeReportId || !runtimeTargets) {
     bundle.textContent = activeReportPayload?.info_plist?.bundle_identifier || 'No analyzed bundle selected';
     boundary.textContent = activeReportId ? 'resolving' : 'unpaired';
@@ -4663,7 +5080,9 @@ function renderRuntimeTargets() {
     list.innerHTML = (runtimeTargets.targets || []).map((target) => {
       const selectedClass = target.environment === runtimeEnvironment ? ' selected' : '';
       const state = target.state || 'unavailable';
-      const stateLabel = target.installed ? (target.running ? 'running' : 'installed') : (target.available ? 'not installed' : 'offline');
+      const stateLabel = target.environment === 'playcover'
+        ? (target.running ? 'running' : target.available ? 'available' : 'missing')
+        : target.installed ? (target.running ? 'running' : 'installed') : (target.available ? 'not installed' : 'offline');
       const candidateDetail = !target.installed && target.candidate ? target.candidate.name + ' build available' : '';
       const detail = candidateDetail || target.device || target.detail || target.boundary;
       return '<div class="execution-target-card ' + escapeHtml(state) + selectedClass + '">' +
@@ -4672,11 +5091,18 @@ function renderRuntimeTargets() {
     }).join('');
   }
   const simulatorTarget = (runtimeTargets.targets || []).find((target) => target.environment === 'simulator');
+  const playcoverTarget = (runtimeTargets.targets || []).find((target) => target.environment === 'playcover');
   const candidate = simulatorTarget && !simulatorTarget.installed ? simulatorTarget.candidate : null;
   installCompanionButton.textContent = candidate ? 'Install Build' : 'Import .app';
   installCompanionButton.dataset.candidatePath = candidate ? candidate.path : '';
   installCompanionButton.disabled = runtimeEnvironment !== 'simulator' || targetActionInProgress || simulatorBootInProgress || !activeReportId;
-  launchTargetButton.disabled = runtimeEnvironment !== 'simulator' || targetActionInProgress || !simulatorTarget || !simulatorTarget.installed || !simulatorTarget.available;
+  launchTargetButton.disabled = targetActionInProgress || (
+    runtimeEnvironment === 'simulator'
+      ? (!simulatorTarget || !simulatorTarget.installed || !simulatorTarget.available)
+      : runtimeEnvironment === 'playcover'
+        ? (!playcoverTarget || !playcoverTarget.available)
+        : true
+  );
   if (runtimePreflight && !runtimePreflight.capture_ready) {
     renderRuntimePreflight();
   }
@@ -4729,7 +5155,9 @@ async function runRuntimePreflight(silent) {
   currentStatus.textContent = 'checking';
   document.getElementById('runtimeRunnerDetail').textContent = runtimeEnvironment === 'simulator'
     ? 'Querying Xcode Simulator and Frida services without launching the target.'
-    : 'Querying Frida device services without launching the target.';
+    : runtimeEnvironment === 'playcover'
+      ? 'Checking PlayCover, Frida, and the macOS process boundary.'
+      : 'Querying Frida device services without launching the target.';
   document.getElementById('preflightChecks').innerHTML =
     '<div class="preflight-check"><i></i><strong>Preflight</strong><span>Checking ' +
     escapeHtml(runtimeEnvironment) + ' ' + escapeHtml(runtimeCaptureMode) + ' readiness for the selected bundle...</span></div>';
@@ -4818,9 +5246,9 @@ async function installDiscoveredCompanion(candidatePath) {
 }
 
 async function launchRuntimeTarget() {
-  if (!serviceAvailable || !activeReportId || runtimeEnvironment !== 'simulator') return;
+  if (!serviceAvailable || !activeReportId || !['simulator', 'playcover'].includes(runtimeEnvironment)) return;
   targetActionInProgress = true;
-  launchTargetButton.textContent = 'Launching';
+  launchTargetButton.textContent = runtimeEnvironment === 'playcover' ? 'Opening' : 'Launching';
   renderRuntimeTargets();
   try {
     const response = await fetch('/api/runtime/targets/launch', {
@@ -4830,13 +5258,13 @@ async function launchRuntimeTarget() {
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Target launch failed');
-    showToast('Simulator target launched');
+    showToast(runtimeEnvironment === 'playcover' ? 'PlayCover target opened' : 'Simulator target launched');
     await runRuntimePreflight(true);
   } catch (error) {
     showToast(String(error.message || error));
   } finally {
     targetActionInProgress = false;
-    launchTargetButton.textContent = 'Launch';
+    launchTargetButton.textContent = runtimeEnvironment === 'playcover' ? 'Open' : 'Launch';
     await refreshRuntimeTargets();
   }
 }
@@ -4847,6 +5275,7 @@ function renderRuntimePreflight(errorMessage) {
   const checklist = document.getElementById('preflightChecks');
   const next = document.getElementById('preflightNextStep');
   status.classList.remove('ready', 'live');
+  launchTargetButton.textContent = runtimeEnvironment === 'playcover' ? 'Open' : 'Launch';
   startRuntimeLabel.textContent = runtimeCaptureMode === 'attach' ? 'Attach' : runtimeCaptureMode === 'gadget' ? 'Guided' : 'Start';
   if (!runtimePreflight) {
     if (activeReportId && !errorMessage) {
@@ -4872,8 +5301,8 @@ function renderRuntimePreflight(errorMessage) {
     status.textContent = runtimeCaptureMode === 'attach' ? 'Attach ready' : 'Spawn ready';
     status.classList.add('ready');
     detail.textContent = 'Target verified for ' + runtimeCaptureMode + ' capture. Starting will instrument the authorized ' +
-      (runtimeEnvironment === 'simulator' ? 'Simulator target.' : 'device.');
-    setDynamicStageStatus(runtimeEnvironment === 'simulator' ? 'simulator ready' : 'device ready', true);
+      (runtimeEnvironment === 'simulator' ? 'Simulator target.' : runtimeEnvironment === 'playcover' ? 'PlayCover process.' : 'device.');
+    setDynamicStageStatus(runtimeEnvironment === 'simulator' ? 'simulator ready' : runtimeEnvironment === 'playcover' ? 'playcover ready' : 'device ready', true);
   } else if (runtimeCaptureMode === 'gadget') {
     status.textContent = 'Gadget setup';
     detail.textContent = 'Live Gadget capture requires a patched and re-signed authorized IPA.';
@@ -4886,6 +5315,12 @@ function renderRuntimePreflight(errorMessage) {
       : 'This is a device IPA. Import a matching IOSSIMULATOR .app, or switch to USB/Gadget for exact device capture.';
     startRuntimeLabel.textContent = candidate ? 'Install Build' : 'Import .app';
     setDynamicStageStatus('simulator build needed', true);
+  } else if (runtimeEnvironment === 'playcover') {
+    status.textContent = 'PlayCover needed';
+    detail.textContent = runtimeCaptureMode === 'attach'
+      ? 'Open the target in PlayCover, refresh preflight, then attach by PID.'
+      : 'PlayCover is available; starting will open the app and attach Frida by PID when the process appears.';
+    setDynamicStageStatus('playcover pending', true);
   } else {
     status.textContent = 'Preflight blocked';
     detail.textContent = 'Resolve the failed checks before starting live capture.';
@@ -5101,6 +5536,7 @@ runtimeEnvironmentButtons.forEach((button) => {
     localStorage.setItem('ire-zero-runtime-environment', runtimeEnvironment);
     simulatorBootAttemptKey = '';
     runtimeEnvironmentButtons.forEach((item) => item.classList.toggle('active', item === button));
+    launchTargetButton.textContent = runtimeEnvironment === 'playcover' ? 'Open' : 'Launch';
     runtimePreflight = null;
     renderRuntimeAvailability();
     refreshRuntimeAvailability();
@@ -5128,6 +5564,15 @@ exportAnalystNotesButton.addEventListener('click', () => {
 openBatchIndexButton.addEventListener('click', () => {
   if (latestBatchIndexUrl) window.open(latestBatchIndexUrl, '_blank');
 });
+guideButton.addEventListener('click', openGuide);
+faqGuideButton.addEventListener('click', openGuide);
+closeGuideButton.addEventListener('click', closeGuide);
+guideDialog.addEventListener('click', (event) => {
+  if (event.target === guideDialog) closeGuide();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !guideDialog.hidden) closeGuide();
+});
 runtimePlanButton.addEventListener('click', () => {
   if (activeReportId) {
     window.open('/reports/' + encodeURIComponent(activeReportId) + '/runtime-plan.md', '_blank');
@@ -5146,7 +5591,14 @@ exportButton.addEventListener('click', () => {
   if (activeReportId) {
     window.open('/reports/' + encodeURIComponent(activeReportId) + '/report.html', '_blank');
   } else {
-    showToast('Run or load a report before exporting');
+    showToast('Run or load a report before opening HTML');
+  }
+});
+exportPdfButton.addEventListener('click', () => {
+  if (activeReportId) {
+    window.open('/reports/' + encodeURIComponent(activeReportId) + '/report.pdf', '_blank');
+  } else {
+    showToast('Run or load a report before exporting PDF');
   }
 });
 reportSelector.addEventListener('change', () => {

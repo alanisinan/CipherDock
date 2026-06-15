@@ -6,16 +6,23 @@ import html
 import json
 import os
 import base64
+import textwrap
 from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
 
 from .models import AnalysisResult, Finding
 
 SEVERITIES = ("critical", "high", "medium", "low", "info")
 
 
-def write_reports(result: AnalysisResult, output_dir: Path, sarif: bool = False, html_report: bool = False) -> None:
+def write_reports(
+    result: AnalysisResult,
+    output_dir: Path,
+    sarif: bool = False,
+    html_report: bool = False,
+    pdf_report: bool = False,
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "report.json").write_text(
         json.dumps(result.to_dict(), indent=2, sort_keys=True, default=_json_default),
@@ -31,6 +38,8 @@ def write_reports(result: AnalysisResult, output_dir: Path, sarif: bool = False,
         )
     if html_report:
         (output_dir / "report.html").write_text(render_html(result), encoding="utf-8")
+    if pdf_report:
+        (output_dir / "report.pdf").write_bytes(render_pdf(result))
 
 
 def write_index_report(results: List[tuple[AnalysisResult, Path]], output_dir: Path) -> None:
@@ -351,6 +360,136 @@ def render_markdown(result: AnalysisResult) -> str:
             lines.append(f"- {error}")
     lines.append("")
     return "\n".join(lines)
+
+
+def render_pdf(result: AnalysisResult) -> bytes:
+    """Render a polished, structured PDF report without external dependencies."""
+
+    document = _StyledPdf(f"CipherDock Report - {result.app_name}")
+    _render_pdf_cover(document, result)
+    _render_pdf_summary(document, result)
+    _render_pdf_findings(document, result)
+    _render_pdf_static_evidence(document, result)
+    _render_pdf_dynamic(document, result)
+    _render_pdf_tools(document, result)
+    return document.render()
+
+
+def render_text_pdf(title: str, text: str) -> bytes:
+    """Render arbitrary report text as a PDF document."""
+
+    document = _StyledPdf(title)
+    document.add_page()
+    document.section(title)
+    for line in _markdown_to_pdf_lines(text):
+        if line:
+            document.paragraph(line)
+        else:
+            document.space(6)
+    return document.render()
+
+
+def render_report_dict_pdf(payload: Dict[str, Any]) -> bytes:
+    """Render a structured PDF from a serialized report.json payload."""
+
+    app_name = str(payload.get("app_name") or "CipherDock Report")
+    info = payload.get("info_plist", {}) if isinstance(payload.get("info_plist"), dict) else {}
+    binary = payload.get("binary", {}) if isinstance(payload.get("binary"), dict) else {}
+    strings = payload.get("strings", {}) if isinstance(payload.get("strings"), dict) else {}
+    dynamic = payload.get("dynamic", {}) if isinstance(payload.get("dynamic"), dict) else {}
+    findings = payload.get("findings", []) if isinstance(payload.get("findings"), list) else []
+    score = int(payload.get("score") or 0)
+    document = _StyledPdf(f"CipherDock Report - {app_name}")
+    document.add_page(header=False)
+    document.rect(0, 0, document.width, document.height, fill=_PDF_COLORS["navy"])
+    document.rect(34, 34, document.width - 68, document.height - 68, stroke=_PDF_COLORS["border"])
+    document.text(54, 720, "CipherDock", size=28, font="bold", color=_PDF_COLORS["teal"])
+    document.text(54, 692, "Hybrid iOS IPA Security Assessment", size=13, color=_PDF_COLORS["muted"])
+    document.text(54, 632, app_name, size=24, font="bold", color=_PDF_COLORS["white"], max_width=420)
+    document.text(54, 604, str(info.get("bundle_identifier") or "unknown bundle"), size=11, color=_PDF_COLORS["muted"], max_width=430)
+    document.text(54, 584, str(payload.get("ipa_path") or ""), size=9, color=_PDF_COLORS["faint"], max_width=430)
+    score_color = _pdf_score_color(score)
+    document.rect(426, 574, 118, 118, fill=_PDF_COLORS["surface"], stroke=_PDF_COLORS["border"])
+    document.rect(426, 574, 118, 7, fill=score_color)
+    document.text(452, 642, str(score), size=34, font="bold", color=score_color)
+    document.text(452, 622, "risk / 100", size=10, color=_PDF_COLORS["muted"])
+    document.add_page()
+    document.section("Executive Summary")
+    document.paragraph(
+        f"CipherDock analyzed {app_name} and produced a deterministic risk score of {score}/100. "
+        "This PDF is generated from the stored report.json artifact."
+    )
+    severity_counts = {severity: 0 for severity in SEVERITIES}
+    for finding in findings:
+        if isinstance(finding, dict):
+            severity_counts[str(finding.get("severity", "info"))] = severity_counts.get(str(finding.get("severity", "info")), 0) + 1
+    x = document.margin
+    y = document.y
+    for severity in SEVERITIES:
+        document.metric_card(x, y - 56, 92, 46, severity.title(), str(severity_counts.get(severity, 0)), accent=_pdf_severity_color(severity))
+        x += 100
+    document.y -= 72
+    breakdown = payload.get("score_breakdown", {}) if isinstance(payload.get("score_breakdown"), dict) else {}
+    document.section("Score Breakdown")
+    document.table([(str(key).replace("_", " ").title(), str(value)) for key, value in breakdown.items()], widths=[330, 120])
+    document.section("Application Metadata")
+    document.table(
+        [
+            ("Bundle ID", str(info.get("bundle_identifier") or "unknown")),
+            ("Executable", str(payload.get("executable_path") or "")),
+            ("URL Types", str(len(info.get("url_types", []) if isinstance(info.get("url_types"), list) else []))),
+            ("Query Schemes", str(len(info.get("query_schemes", []) if isinstance(info.get("query_schemes"), list) else []))),
+            ("Embedded Frameworks", str(len(binary.get("embedded_frameworks", []) if isinstance(binary.get("embedded_frameworks"), list) else []))),
+            ("Embedded Dylibs", str(len(binary.get("embedded_dylibs", []) if isinstance(binary.get("embedded_dylibs"), list) else []))),
+            ("Dynamic Status", str(dynamic.get("status") or payload.get("dynamic_status") or "not_captured")),
+            ("Capture Mode", str(dynamic.get("capture_mode") or payload.get("capture_mode") or "not_captured")),
+        ],
+        widths=[150, 330],
+    )
+    document.add_page()
+    document.section("Findings")
+    for finding in findings[:40]:
+        if not isinstance(finding, dict):
+            continue
+        evidence = finding.get("evidence", [])
+        evidence_text = "; ".join(str(item) for item in evidence[:4]) if isinstance(evidence, list) else ""
+        body = str(finding.get("description") or "")
+        if evidence_text:
+            body += " Evidence: " + evidence_text
+        document.card(
+            str(finding.get("title") or finding.get("id") or "Finding"),
+            body,
+            footer=f"{finding.get('severity', 'info')} | {finding.get('category', 'uncategorized')} | {finding.get('confidence', 'medium')}",
+        )
+    document.add_page()
+    document.section("Static And Dynamic Evidence")
+    document.table(
+        [
+            ("URLs", str(len(strings.get("urls", []) if isinstance(strings.get("urls"), list) else []))),
+            ("IP Addresses", str(len(strings.get("ips", []) if isinstance(strings.get("ips"), list) else []))),
+            ("Secret Candidates", str(len(strings.get("secrets", []) if isinstance(strings.get("secrets"), list) else []))),
+            ("Recovered Symbols", str(len(binary.get("symbols", []) if isinstance(binary.get("symbols"), list) else []))),
+            ("Runtime Events", str(len(dynamic.get("events", []) if isinstance(dynamic.get("events"), list) else []))),
+        ],
+        widths=[220, 120],
+    )
+    document.list_block("Notable URLs", strings.get("urls", [])[:14] if isinstance(strings.get("urls"), list) else [])
+    events = dynamic.get("events", []) if isinstance(dynamic.get("events"), list) else []
+    if events:
+        document.subsection("Observed Runtime Events")
+        for event in events[:16]:
+            if isinstance(event, dict):
+                document.event_card(
+                    str(event.get("layer") or "event"),
+                    str(event.get("operation") or "observed"),
+                    str(event.get("value") or ""),
+                    str(event.get("correlation_status") or event.get("verdict") or "OBSERVED"),
+                    str(event.get("source") or dynamic.get("evidence_source") or "authorized runtime capture"),
+                )
+    else:
+        limitations = dynamic.get("limitations", []) if isinstance(dynamic.get("limitations"), list) else []
+        document.list_block("Limitations", limitations)
+    return document.render()
 
 
 def render_sarif(result: AnalysisResult) -> Dict[str, object]:
@@ -739,7 +878,7 @@ def _render_index_row(result: AnalysisResult, report_dir: Path, output_dir: Path
   <td><code>{html.escape(result.info_plist.bundle_identifier or "unknown")}</code></td>
   <td class="score {score_class}">{result.score}</td>
   <td>{html.escape(finding_summary)}</td>
-  <td><a href="{html.escape(rel)}/report.html">HTML</a> · <a href="{html.escape(rel)}/report.md">MD</a> · <a href="{html.escape(rel)}/report.json">JSON</a></td>
+  <td><a href="{html.escape(rel)}/report.html">HTML</a> · <a href="{html.escape(rel)}/report.pdf">PDF</a> · <a href="{html.escape(rel)}/report.md">MD</a> · <a href="{html.escape(rel)}/report.json">JSON</a></td>
 </tr>
 """
 
@@ -847,3 +986,519 @@ def _notes_html(result: AnalysisResult) -> str:
         f"{_list_items(note.evidence)}</article>"
         for note in result.ai_notes
     )
+
+
+def _render_pdf_cover(document: "_StyledPdf", result: AnalysisResult) -> None:
+    document.add_page(header=False)
+    document.rect(0, 0, document.width, document.height, fill=_PDF_COLORS["navy"])
+    document.rect(34, 34, document.width - 68, document.height - 68, stroke=_PDF_COLORS["border"])
+    document.text(54, 720, "CipherDock", size=28, font="bold", color=_PDF_COLORS["teal"])
+    document.text(54, 692, "Hybrid iOS IPA Security Assessment", size=13, color=_PDF_COLORS["muted"])
+    document.text(54, 632, result.app_name, size=24, font="bold", color=_PDF_COLORS["white"], max_width=420)
+    document.text(54, 604, result.info_plist.bundle_identifier or "unknown bundle", size=11, color=_PDF_COLORS["muted"], max_width=430)
+    document.text(54, 584, result.ipa_path, size=9, color=_PDF_COLORS["faint"], max_width=430)
+    score_color = _pdf_score_color(result.score)
+    document.rect(426, 574, 118, 118, fill=_PDF_COLORS["surface"], stroke=_PDF_COLORS["border"])
+    document.rect(426, 574, 118, 7, fill=score_color)
+    document.text(452, 642, str(result.score), size=34, font="bold", color=score_color)
+    document.text(452, 622, "risk / 100", size=10, color=_PDF_COLORS["muted"])
+    document.text(54, 512, "Assessment Snapshot", size=15, font="bold", color=_PDF_COLORS["white"])
+    grouped = _group_findings(result.findings)
+    snapshot = [
+        ("Findings", str(len(result.findings))),
+        ("Critical/High", str(len(grouped.get("critical", [])) + len(grouped.get("high", [])))),
+        ("Dynamic", result.dynamic.status.replace("_", " ")),
+        ("Strings", str(result.strings.total_strings)),
+    ]
+    x = 54
+    for label, value in snapshot:
+        document.metric_card(x, 454, 112, 50, label, value)
+        x += 122
+    document.text(54, 404, "Generated artifacts include JSON, Markdown, HTML, SARIF, Frida hooks, runtime plan, and this PDF report.", size=10, color=_PDF_COLORS["muted"], max_width=490)
+
+
+def _render_pdf_summary(document: "_StyledPdf", result: AnalysisResult) -> None:
+    document.add_page()
+    document.section("Executive Summary")
+    document.paragraph(
+        f"CipherDock analyzed {result.app_name} and produced a deterministic risk score of {result.score}/100. "
+        f"The report combines plist metadata, entitlement and signing information, Mach-O structure, extracted strings, "
+        f"symbol intelligence, heuristic findings, and optional runtime evidence."
+    )
+    grouped = _group_findings(result.findings)
+    x = document.margin
+    y = document.y
+    for severity in SEVERITIES:
+        document.metric_card(x, y - 56, 92, 46, severity.title(), str(len(grouped.get(severity, []))), accent=_pdf_severity_color(severity))
+        x += 100
+    document.y -= 72
+    document.section("Score Breakdown")
+    rows = [(key.replace("_", " ").title(), str(value)) for key, value in result.score_breakdown.items()]
+    document.table(rows, widths=[330, 120])
+    document.section("Application Metadata")
+    document.table(
+        [
+            ("Bundle ID", result.info_plist.bundle_identifier or "unknown"),
+            ("Executable", result.executable_path),
+            ("URL Types", str(len(result.info_plist.url_types))),
+            ("Query Schemes", str(len(result.info_plist.query_schemes))),
+            ("Embedded Frameworks", str(len(result.binary.embedded_frameworks))),
+            ("Embedded Dylibs", str(len(result.binary.embedded_dylibs))),
+            ("Mach-O Sections", str(len(result.binary.sections))),
+            ("Dynamic Status", result.dynamic.status),
+            ("Capture Mode", result.dynamic.capture_mode),
+        ],
+        widths=[150, 330],
+    )
+
+
+def _render_pdf_findings(document: "_StyledPdf", result: AnalysisResult) -> None:
+    document.add_page()
+    document.section("Findings")
+    grouped = _group_findings(result.findings)
+    if not result.findings:
+        document.empty("No findings were produced.")
+        return
+    for severity in SEVERITIES:
+        findings = grouped.get(severity, [])
+        if not findings:
+            continue
+        document.subsection(f"{severity.title()} Findings ({len(findings)})", color=_pdf_severity_color(severity))
+        for finding in findings:
+            document.finding_card(finding)
+
+
+def _render_pdf_static_evidence(document: "_StyledPdf", result: AnalysisResult) -> None:
+    document.add_page()
+    document.section("Static Evidence")
+    document.subsection("Network And Secret Strings")
+    document.table(
+        [
+            ("URLs", str(len(result.strings.urls))),
+            ("IP Addresses", str(len(result.strings.ips))),
+            ("Secret Candidates", str(len(result.strings.secrets))),
+            ("Suspicious Keyword Groups", str(len(result.strings.suspicious_keywords))),
+        ],
+        widths=[210, 120],
+    )
+    document.list_block("Notable URLs", result.strings.urls[:12])
+    document.list_block("Secret Candidates", result.strings.secrets[:8])
+    document.subsection("Bundle And Mach-O Inventory")
+    document.table(
+        [
+            ("Linked Libraries", str(len(result.binary.linked_libraries))),
+            ("Embedded Frameworks", str(len(result.binary.embedded_frameworks))),
+            ("Embedded Dylibs", str(len(result.binary.embedded_dylibs))),
+            ("Recovered Symbols", str(len(result.binary.symbols))),
+            ("Static Evidence Items", str(len(result.binary.evidence))),
+        ],
+        widths=[210, 120],
+    )
+    document.list_block("Embedded Frameworks", result.binary.embedded_frameworks[:12])
+    if result.binary.symbol_categories:
+        document.subsection("Symbol Categories")
+        rows = [(key.replace("_", " ").title(), str(len(values))) for key, values in sorted(result.binary.symbol_categories.items())]
+        document.table(rows, widths=[260, 80])
+
+
+def _render_pdf_dynamic(document: "_StyledPdf", result: AnalysisResult) -> None:
+    document.add_page()
+    document.section("Dynamic Capture")
+    document.table(
+        [
+            ("Status", result.dynamic.status),
+            ("Capture Mode", result.dynamic.capture_mode),
+            ("Evidence Source", result.dynamic.evidence_source or "none"),
+            ("Session", result.dynamic.session or "none"),
+            ("Events", str(len(result.dynamic.events))),
+            ("Planned Probes", str(len(result.dynamic.probes))),
+        ],
+        widths=[150, 330],
+    )
+    coverage = result.dynamic.campaign_coverage
+    if coverage:
+        document.subsection("Campaign Coverage")
+        document.table(
+            [
+                (
+                    str(campaign.get("title", "Campaign")),
+                    str(campaign.get("status", "planned")),
+                    str(campaign.get("event_count", 0)),
+                )
+                for campaign in coverage.get("campaigns", [])[:14]
+            ],
+            widths=[260, 120, 70],
+        )
+    if result.dynamic.events:
+        document.subsection("Observed Events")
+        for event in result.dynamic.events[:18]:
+            document.event_card(
+                event.layer,
+                event.operation,
+                event.value,
+                event.correlation_status,
+                event.source or result.dynamic.evidence_source or "authorized runtime capture",
+            )
+    else:
+        document.list_block("Limitations", result.dynamic.limitations)
+        document.list_block("Planned Probes", [f"{probe.priority} {probe.layer} {probe.operation}: {probe.target}" for probe in result.dynamic.probes[:12]])
+
+
+def _render_pdf_tools(document: "_StyledPdf", result: AnalysisResult) -> None:
+    document.add_page()
+    document.section("Tool Status And Notes")
+    if result.ai_notes:
+        document.subsection("Analyst Notes")
+        for note in result.ai_notes[:8]:
+            document.card(note.title, note.summary, footer=f"Confidence: {note.confidence} | Source: {note.source}")
+    if result.binary.tools:
+        document.subsection("Tool Availability")
+        rows = [
+            (name, "available" if tool.available else "missing", tool.error or "")
+            for name, tool in sorted(result.binary.tools.items())
+        ]
+        document.table(rows, widths=[150, 90, 250])
+    if result.errors:
+        document.list_block("Analysis Errors", result.errors)
+
+
+def _markdown_to_pdf_lines(markdown: str) -> List[str]:
+    lines: List[str] = []
+    for raw_line in markdown.splitlines():
+        cleaned = raw_line.replace("`", "").replace("**", "").strip()
+        if cleaned.startswith("#### "):
+            cleaned = cleaned[5:].upper()
+        elif cleaned.startswith("### "):
+            cleaned = cleaned[4:].upper()
+        elif cleaned.startswith("## "):
+            cleaned = cleaned[3:].upper()
+        elif cleaned.startswith("# "):
+            cleaned = cleaned[2:].upper()
+        if not cleaned:
+            lines.append("")
+            continue
+        indent = "  " if cleaned.startswith("- ") else ""
+        text = cleaned[2:] if cleaned.startswith("- ") else cleaned
+        wrapped = textwrap.wrap(text, width=92, subsequent_indent=indent + "  ") or [""]
+        lines.extend(indent + line if index == 0 else line for index, line in enumerate(wrapped))
+    return lines
+
+
+def _paginate_pdf_lines(lines: List[str], lines_per_page: int = 52) -> List[List[str]]:
+    pages: List[List[str]] = []
+    current: List[str] = []
+    for line in lines:
+        if len(current) >= lines_per_page:
+            pages.append(current)
+            current = []
+        current.append(line)
+    if current:
+        pages.append(current)
+    return pages or [["No report content."]]
+
+
+_PDF_COLORS = {
+    "white": (0.91, 0.94, 0.97),
+    "muted": (0.58, 0.65, 0.72),
+    "faint": (0.40, 0.46, 0.52),
+    "navy": (0.05, 0.07, 0.10),
+    "surface": (0.09, 0.12, 0.16),
+    "surface2": (0.13, 0.16, 0.20),
+    "border": (0.22, 0.27, 0.33),
+    "teal": (0.31, 0.79, 0.75),
+    "green": (0.51, 0.77, 0.44),
+    "amber": (0.90, 0.68, 0.31),
+    "red": (0.93, 0.43, 0.43),
+    "blue": (0.42, 0.65, 1.00),
+    "violet": (0.72, 0.57, 1.00),
+}
+
+
+class _StyledPdf:
+    width = 612
+    height = 792
+    margin = 42
+
+    def __init__(self, title: str) -> None:
+        self.title = title
+        self.pages: List[List[str]] = []
+        self.commands: List[str] = []
+        self.y = 742
+
+    def add_page(self, header: bool = True) -> None:
+        if self.commands:
+            self.pages.append(self.commands)
+        self.commands = []
+        self.y = 742
+        self.rect(0, 0, self.width, self.height, fill=(0.98, 0.99, 1.0))
+        if header:
+            self.rect(0, 748, self.width, 44, fill=_PDF_COLORS["navy"])
+            self.text(self.margin, 770, "CipherDock", size=12, font="bold", color=_PDF_COLORS["teal"])
+            self.text(128, 770, self.title[:78], size=9, color=_PDF_COLORS["muted"])
+            self.y = 724
+
+    def render(self) -> bytes:
+        if self.commands:
+            self.pages.append(self.commands)
+            self.commands = []
+        if not self.pages:
+            self.add_page()
+            self.pages.append(self.commands)
+        streams = ["\n".join(page).encode("latin-1", errors="replace") for page in self.pages]
+        return _build_pdf_streams(streams)
+
+    def ensure(self, height: float) -> None:
+        if self.y - height < 48:
+            self.add_page()
+
+    def section(self, title: str) -> None:
+        self.ensure(38)
+        self.space(6)
+        self.text(self.margin, self.y, title, size=16, font="bold", color=_PDF_COLORS["navy"])
+        self.line(self.margin, self.y - 8, self.width - self.margin, self.y - 8, color=_PDF_COLORS["teal"], width=1.2)
+        self.y -= 28
+
+    def subsection(self, title: str, color: tuple[float, float, float] = _PDF_COLORS["navy"]) -> None:
+        self.ensure(28)
+        self.text(self.margin, self.y, title, size=12, font="bold", color=color)
+        self.y -= 20
+
+    def paragraph(self, text: str, size: int = 9, color: tuple[float, float, float] = _PDF_COLORS["surface"]) -> None:
+        lines = _wrap_pdf_text(text, 100)
+        self.ensure(len(lines) * 12 + 4)
+        for line in lines:
+            self.text(self.margin, self.y, line, size=size, color=color)
+            self.y -= 12
+        self.y -= 4
+
+    def empty(self, text: str) -> None:
+        self.card("No Evidence", text)
+
+    def metric_card(
+        self,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        label: str,
+        value: str,
+        accent: tuple[float, float, float] = _PDF_COLORS["teal"],
+    ) -> None:
+        self.rect(x, y, width, height, fill=(0.96, 0.98, 0.99), stroke=(0.80, 0.84, 0.88))
+        self.rect(x, y + height - 5, width, 5, fill=accent)
+        self.text(x + 9, y + height - 18, label.upper(), size=7, color=_PDF_COLORS["faint"])
+        self.text(x + 9, y + 14, value[:28], size=15, font="bold", color=accent)
+
+    def table(self, rows: List[tuple[str, ...]], widths: List[int]) -> None:
+        if not rows:
+            self.empty("No table rows available.")
+            return
+        row_height = 20
+        total_width = sum(widths)
+        for row_index, row in enumerate(rows):
+            cell_lines = [
+                _wrap_pdf_text(str(value), max(10, int(widths[index] / 5.3)))
+                for index, value in enumerate(row)
+            ]
+            height = max(row_height, max(len(lines) for lines in cell_lines) * 10 + 8)
+            self.ensure(height + 2)
+            y = self.y - height
+            self.rect(self.margin, y, total_width, height, fill=(0.97, 0.98, 0.99) if row_index % 2 else (0.93, 0.95, 0.97), stroke=(0.82, 0.86, 0.90))
+            x = self.margin
+            for index, lines in enumerate(cell_lines):
+                if index:
+                    self.line(x, y, x, y + height, color=(0.82, 0.86, 0.90), width=0.4)
+                font = "bold" if index == 0 else "regular"
+                for line_index, line in enumerate(lines[:4]):
+                    self.text(x + 6, y + height - 13 - line_index * 10, line, size=8, font=font, color=_PDF_COLORS["surface"])
+                x += widths[index]
+            self.y -= height
+        self.y -= 10
+
+    def card(self, title: str, body: str, footer: str = "") -> None:
+        body_lines = _wrap_pdf_text(body, 92)
+        footer_lines = _wrap_pdf_text(footer, 92) if footer else []
+        height = 34 + len(body_lines) * 11 + len(footer_lines) * 10
+        self.ensure(height + 8)
+        y = self.y - height
+        self.rect(self.margin, y, self.width - self.margin * 2, height, fill=(0.97, 0.98, 0.99), stroke=(0.82, 0.86, 0.90))
+        self.text(self.margin + 12, y + height - 18, title[:92], size=10, font="bold", color=_PDF_COLORS["navy"])
+        line_y = y + height - 33
+        for line in body_lines:
+            self.text(self.margin + 12, line_y, line, size=8, color=_PDF_COLORS["surface"])
+            line_y -= 11
+        for line in footer_lines:
+            self.text(self.margin + 12, line_y - 2, line, size=7, color=_PDF_COLORS["faint"])
+            line_y -= 10
+        self.y -= height + 8
+
+    def finding_card(self, finding: Finding) -> None:
+        accent = _pdf_severity_color(finding.severity)
+        evidence = "; ".join(finding.evidence[:4])
+        body_parts = [finding.description]
+        if finding.recommendation:
+            body_parts.append("Recommendation: " + finding.recommendation)
+        if evidence:
+            body_parts.append("Evidence: " + evidence)
+        footer = f"{finding.id} | {finding.category} | confidence: {finding.confidence}"
+        height_hint = 76 + len(_wrap_pdf_text(" ".join(body_parts), 92)) * 6
+        self.ensure(min(150, height_hint))
+        y_start = self.y
+        self.card(finding.title, " ".join(body_parts), footer=footer)
+        self.rect(self.margin, self.y + 8, 5, y_start - self.y - 8, fill=accent)
+
+    def event_card(self, layer: str, operation: str, value: str, verdict: str, source: str) -> None:
+        self.card(f"{layer.upper()} | {operation}", value, footer=f"{verdict} | {source}")
+
+    def list_block(self, title: str, values: Iterable[str]) -> None:
+        items = [str(value) for value in values if str(value)]
+        self.subsection(title)
+        if not items:
+            self.empty("None observed.")
+            return
+        for item in items[:18]:
+            self.paragraph("- " + item, size=8)
+
+    def space(self, height: float) -> None:
+        self.y -= height
+
+    def rect(
+        self,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        fill: tuple[float, float, float] | None = None,
+        stroke: tuple[float, float, float] | None = None,
+    ) -> None:
+        if fill:
+            self.commands.append(_pdf_color(fill, fill_op=True))
+        if stroke:
+            self.commands.append(_pdf_color(stroke, fill_op=False))
+        op = "B" if fill and stroke else "f" if fill else "S"
+        self.commands.append(f"{x:.2f} {y:.2f} {width:.2f} {height:.2f} re {op}")
+
+    def line(self, x1: float, y1: float, x2: float, y2: float, color: tuple[float, float, float], width: float = 1.0) -> None:
+        self.commands.append(_pdf_color(color, fill_op=False))
+        self.commands.append(f"{width:.2f} w {x1:.2f} {y1:.2f} m {x2:.2f} {y2:.2f} l S")
+
+    def text(
+        self,
+        x: float,
+        y: float,
+        text: str,
+        size: int = 9,
+        font: str = "regular",
+        color: tuple[float, float, float] = _PDF_COLORS["surface"],
+        max_width: int | None = None,
+    ) -> None:
+        lines = _wrap_pdf_text(text, max_width // max(4, int(size * 0.52)) if max_width else 999)
+        font_name = "/F2" if font == "bold" else "/F1"
+        for index, line in enumerate(lines[:3]):
+            self.commands.append(_pdf_color(color, fill_op=True))
+            self.commands.append(f"BT {font_name} {size} Tf {x:.2f} {y - index * (size + 3):.2f} Td ({_pdf_escape(line)}) Tj ET")
+
+
+def _wrap_pdf_text(value: str, width: int) -> List[str]:
+    cleaned = " ".join(str(value).replace("\n", " ").split())
+    if not cleaned:
+        return [""]
+    return textwrap.wrap(cleaned, width=width, break_long_words=True, replace_whitespace=True) or [cleaned]
+
+
+def _pdf_score_color(score: int) -> tuple[float, float, float]:
+    if score >= 70:
+        return _PDF_COLORS["red"]
+    if score >= 35:
+        return _PDF_COLORS["amber"]
+    return _PDF_COLORS["green"]
+
+
+def _pdf_severity_color(severity: str) -> tuple[float, float, float]:
+    if severity in {"critical", "high"}:
+        return _PDF_COLORS["red"]
+    if severity == "medium":
+        return _PDF_COLORS["amber"]
+    if severity == "low":
+        return _PDF_COLORS["blue"]
+    return _PDF_COLORS["muted"]
+
+
+def _pdf_color(color: tuple[float, float, float], fill_op: bool) -> str:
+    op = "rg" if fill_op else "RG"
+    return f"{color[0]:.3f} {color[1]:.3f} {color[2]:.3f} {op}"
+
+
+def _build_pdf_streams(page_streams: List[bytes]) -> bytes:
+    objects: List[bytes] = []
+    page_object_ids: List[int] = []
+    regular_font_id = 3
+    bold_font_id = 4
+    pages_id = 2
+
+    def add_object(payload: bytes) -> int:
+        objects.append(payload)
+        return len(objects)
+
+    add_object(_pdf_dict({"Type": "/Catalog", "Pages": f"{pages_id} 0 R"}))
+    add_object(b"")
+    add_object(_pdf_dict({"Type": "/Font", "Subtype": "/Type1", "BaseFont": "/Helvetica"}))
+    add_object(_pdf_dict({"Type": "/Font", "Subtype": "/Type1", "BaseFont": "/Helvetica-Bold"}))
+
+    for content in page_streams:
+        content_id = add_object(b"<< /Length " + str(len(content)).encode("ascii") + b" >>\nstream\n" + content + b"\nendstream")
+        page_id = add_object(
+            _pdf_dict(
+                {
+                    "Type": "/Page",
+                    "Parent": f"{pages_id} 0 R",
+                    "MediaBox": "[0 0 612 792]",
+                    "Resources": f"<< /Font << /F1 {regular_font_id} 0 R /F2 {bold_font_id} 0 R >> >>",
+                    "Contents": f"{content_id} 0 R",
+                }
+            )
+        )
+        page_object_ids.append(page_id)
+
+    objects[pages_id - 1] = _pdf_dict(
+        {
+            "Type": "/Pages",
+            "Kids": "[" + " ".join(f"{page_id} 0 R" for page_id in page_object_ids) + "]",
+            "Count": str(len(page_object_ids)),
+        }
+    )
+    return _serialize_pdf(objects)
+
+
+def _pdf_dict(values: Dict[str, str]) -> bytes:
+    body = " ".join(f"/{key} {value}" for key, value in values.items())
+    return f"<< {body} >>".encode("ascii")
+
+
+def _serialize_pdf(objects: List[bytes]) -> bytes:
+    output = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for index, payload in enumerate(objects, start=1):
+        offsets.append(len(output))
+        output.extend(f"{index} 0 obj\n".encode("ascii"))
+        output.extend(payload)
+        output.extend(b"\nendobj\n")
+    xref_offset = len(output)
+    output.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    output.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        output.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    output.extend(
+        (
+            "trailer\n"
+            f"<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
+            "startxref\n"
+            f"{xref_offset}\n"
+            "%%EOF\n"
+        ).encode("ascii")
+    )
+    return bytes(output)
+
+
+def _pdf_escape(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
