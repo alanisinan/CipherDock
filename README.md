@@ -1,6 +1,6 @@
 # CipherDock
 
-[![DOI](https://zenodo.org/badge/latestdoi/alanisinan/CipherDock)](https://zenodo.org/badge/latestdoi/alanisinan/CipherDock)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20710401.svg)](https://doi.org/10.5281/zenodo.20710401)
 
 A jailbreak-free hybrid static-dynamic iOS IPA security assessment framework.
 
